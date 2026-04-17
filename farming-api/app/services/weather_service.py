@@ -6,11 +6,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-import httpx
+async def fetch_weather(latitude: float, longitude: float) -> Optional[dict[str, Any]]:
+    """Fetch current weather data from OpenWeatherMap API."""
+    if not settings.OPENWEATHER_API_KEY:
+        logger.warning("OPENWEATHER_API_KEY not set, returning mock weather data")
+        return _mock_weather(latitude, longitude)
 
-def fetch_weather(latitude: float, longitude: float):
     url = "https://api.openweathermap.org/data/2.5/weather"
-
     params = {
         "lat": latitude,
         "lon": longitude,
@@ -18,11 +20,11 @@ def fetch_weather(latitude: float, longitude: float):
         "units": "metric",
     }
 
-    with httpx.Client(timeout=10.0) as client:
-        response = client.get(url, params=params)
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.get(url, params=params)
         response.raise_for_status()
-        return response.json()
-    
+        data = response.json()
         return {
             "temperature": data["main"]["temp"],
             "feels_like": data["main"]["feels_like"],
