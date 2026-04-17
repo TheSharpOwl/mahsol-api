@@ -20,25 +20,23 @@ async def fetch_weather(latitude: float, longitude: float) -> Optional[dict[str,
         "units": "metric",
     }
 
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(url, params=params)
-            response.raise_for_status()
-            data = response.json()
-            return {
-                "temperature": data["main"]["temp"],
-                "feels_like": data["main"]["feels_like"],
-                "humidity": data["main"]["humidity"],
-                "pressure": data["main"]["pressure"],
-                "description": data["weather"][0]["description"],
-                "wind_speed": data["wind"]["speed"],
-                "city": data.get("name"),
-                "country": data.get("sys", {}).get("country"),
-                "raw": data,
-            }
-    except Exception as e:
-        logger.error(f"Failed to fetch weather data: {e}")
-        return _mock_weather(latitude, longitude)
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+        return {
+            "temperature": data["main"]["temp"],
+            "feels_like": data["main"]["feels_like"],
+            "humidity": data["main"]["humidity"],
+            "pressure": data["main"]["pressure"],
+            "description": data["weather"][0]["description"],
+            "wind_speed": data["wind"]["speed"],
+            "city": data.get("name"),
+            "country": data.get("sys", {}).get("country"),
+            "raw": data,
+            "note": "called the real APi"
+        }
 
 
 def _mock_weather(latitude: float, longitude: float) -> dict:
@@ -51,7 +49,7 @@ def _mock_weather(latitude: float, longitude: float) -> dict:
         "wind_speed": 3.5,
         "city": "Unknown",
         "country": "Unknown",
-        "note": "Mock weather data — set OPENWEATHER_API_KEY for real data",
+        "note": "Called the MOCK API",
         "latitude": latitude,
         "longitude": longitude,
     }
