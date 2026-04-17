@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
 
-    OPENWEATHER_API_KEY: Optional[str] = None
+    OPENWEATHER_API_KEY: Optional[str] = "cdc73c9756c6bddbaa7599a793e73401"
     OPENAI_API_KEY: Optional[str] = None
 
     class Config:
