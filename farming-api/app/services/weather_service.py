@@ -8,15 +8,11 @@ logger = logging.getLogger(__name__)
 
 async def fetch_weather(latitude: float, longitude: float) -> Optional[dict[str, Any]]:
     """Fetch current weather data from OpenWeatherMap API."""
-    if not settings.OPENWEATHER_API_KEY:
-        logger.warning("OPENWEATHER_API_KEY not set, returning mock weather data")
-        return _mock_weather(latitude, longitude)
-
     url = "https://api.openweathermap.org/data/2.5/weather"
     params = {
         "lat": latitude,
         "lon": longitude,
-        "appid": settings.OPENWEATHER_API_KEY,
+        "appid": "cdc73c9756c6bddbaa7599a793e73401",
         "units": "metric",
     }
 
@@ -25,6 +21,7 @@ async def fetch_weather(latitude: float, longitude: float) -> Optional[dict[str,
         response = await client.get(url, params=params)
         response.raise_for_status()
         data = response.json()
+        return data
         return {
             "temperature": data["main"]["temp"],
             "feels_like": data["main"]["feels_like"],
@@ -35,7 +32,7 @@ async def fetch_weather(latitude: float, longitude: float) -> Optional[dict[str,
             "city": data.get("name"),
             "country": data.get("sys", {}).get("country"),
             "raw": data,
-            "note": "called the real APi"
+            "note": "called the real API"
         }
 
 
