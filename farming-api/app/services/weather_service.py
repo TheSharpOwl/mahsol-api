@@ -47,7 +47,7 @@ def _mock_weather(latitude: float, longitude: float) -> dict:
         "wind_speed": 3.5,
         "city": "Unknown",
         "country": "Unknown",
-        "note": "Called the MOCK API"
+        "note": "Called the MOCK API",
         "latitude": latitude,
         "longitude": longitude,
     }
