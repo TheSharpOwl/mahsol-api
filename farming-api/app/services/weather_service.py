@@ -21,7 +21,6 @@ async def fetch_weather(latitude: float, longitude: float) -> Optional[dict[str,
         response = await client.get(url, params=params)
         response.raise_for_status()
         data = response.json()
-        return data
         return {
             "temperature": data["main"]["temp"],
             "feels_like": data["main"]["feels_like"],
