@@ -137,3 +137,100 @@ def _mock_daily_report(land_info: dict, weather_data: dict) -> dict[str, str]:
     )
 
     return {"warning": warning, "report_text": report_text}
+
+
+async def get_ai_advice(land, weather) -> str:
+    """Get AI farming advice based on land + weather."""
+
+    if not settings.OPENAI_API_KEY:
+        return _mock_ai_advice(land, weather)
+
+    system_prompt = (
+        "You are an expert agricultural assistant helping farmers optimize crop yield, "
+        "prevent diseases, and manage resources efficiently. "
+        "Provide clear, practical, and actionable advice tailored to the farmer's land and current weather conditions. "
+        "Focus on irrigation, fertilization, disease prevention, and weather adaptation. "
+        "Keep the response structured and easy to follow."
+    )
+
+    user_prompt = f"""
+    Here is the farmer's land information:
+
+    - Soil type: {land.soil_type or "Unknown"}
+    - Crop type: {land.crop_type or "Unknown"}
+    - Additional notes: {land.additional_notes or "None"}
+    - Location: latitude {land.latitude}, longitude {land.longitude}
+
+    Current weather conditions:
+    - Temperature: {weather.get("temperature", "Unknown")}°C
+    - Wind speed: {weather.get("windspeed", "Unknown")} km/h
+    - Weather code: {weather.get("weathercode", "Unknown")}
+
+    Based on this data:
+    1. Assess current risks (disease, drought, pests, etc.)
+    2. Recommend irrigation strategy
+    3. Suggest fertilization or soil improvements
+    4. Provide preventive actions for the next few days
+
+    Keep it concise but practical.
+    """
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "gpt-4o-mini",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    "max_tokens": 500,
+                    "temperature": 0.7,
+                },
+            )
+
+            response.raise_for_status()
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+
+    except Exception as e:
+        logger.error(f"AI advice request failed: {e}")
+        return _mock_ai_advice(land, weather)
+
+
+def _mock_ai_advice(land, weather) -> str:
+    """Fallback farming advice when AI is unavailable."""
+
+    temp = weather.get("temperature")
+    crop = (land.crop_type or "").lower()
+    soil = (land.soil_type or "").lower()
+
+    if temp and temp > 30:
+        return (
+            "High temperatures detected. Your crops may experience heat stress. "
+            "Increase irrigation frequency, preferably early morning or late evening to reduce evaporation. "
+            "Consider mulching to retain soil moisture and protect roots."
+        )
+
+    if "clay" in soil:
+        return (
+            "Clay soil retains water well but can cause poor drainage. "
+            "Avoid overwatering and consider adding organic matter to improve aeration and root health."
+        )
+
+    if "wheat" in crop:
+        return (
+            "Wheat crops benefit from moderate watering and nitrogen-rich fertilization. "
+            "Monitor for fungal diseases, especially in humid conditions, and ensure proper spacing for airflow."
+        )
+
+    return (
+        "Based on your land and current weather, maintain balanced irrigation and monitor crop health closely. "
+        "Check for early signs of pests or disease and adjust care depending on temperature and soil conditions. "
+        "Adding organic compost can improve long-term soil fertility."
+    )
