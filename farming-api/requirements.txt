@@ -15,3 +15,5 @@ celery[redis]==5.4.0
 redis==5.2.1
 flower==2.0.1
 alembic==1.14.0
+rasterio==1.4.3
+pyodbc==5.2.0

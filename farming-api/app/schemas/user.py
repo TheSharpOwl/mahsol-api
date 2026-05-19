@@ -8,6 +8,8 @@ class UserSignupRequest(BaseModel):
     email: EmailStr
     password: str
     role: UserRole = UserRole.farmer
+    latitude: float
+    longitude: float
 
     @field_validator("role")
     @classmethod

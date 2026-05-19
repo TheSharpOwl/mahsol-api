@@ -27,6 +27,18 @@ class LandInfoResponse(BaseModel):
     soil_type: Optional[str]
     crop_type: Optional[str]
     additional_notes: Optional[str]
+    soil_texture: Optional[str] = None
+    sand_percent: Optional[float] = None
+    silt_percent: Optional[float] = None
+    clay_percent: Optional[float] = None
+    ph: Optional[float] = None
+    organic_carbon: Optional[float] = None
+    cation_exchange_capacity: Optional[float] = None
+    bulk_density: Optional[float] = None
+    electrical_conductivity: Optional[float] = None
+    gypsum_content: Optional[float] = None
+    available_water_capacity: Optional[float] = None
+    soil_components: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     weather: Optional[Any] = None

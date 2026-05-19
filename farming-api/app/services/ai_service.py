@@ -2,138 +2,106 @@ import httpx
 import json
 import logging
 from typing import Optional, Any
+from fastapi import UploadFile
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-async def get_chat_response(user_message: str, conversation_history: list[dict] | None = None) -> str:
-    """Get AI response for chat message. Falls back to mock if no API key."""
-    if not settings.OPENAI_API_KEY:
-        return _mock_chat_response(user_message)
-
-    messages = conversation_history or []
-    messages.append({"role": "user", "content": user_message})
-
-    system_prompt = (
-        "You are an expert agricultural assistant helping farmers diagnose crop diseases, "
-        "manage their land, and improve yields. Provide practical, science-based advice. "
-        "When the user shares an image, analyze it for signs of crop disease, pest damage, or nutrient deficiencies. "
-        "Always ask clarifying questions when needed and provide step-by-step actionable recommendations."
-    )
+async def _call_custom_ai_service(payload: dict) -> str:
+    """Helper to call the custom AI service."""
+    if not settings.AI_SERVICE_URL:
+        logger.warning("AI_SERVICE_URL not set, falling back to mock")
+        return ""
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "gpt-4o-mini",
-                    "messages": [{"role": "system", "content": system_prompt}] + messages,
-                    "max_tokens": 500,
-                    "temperature": 0.7,
-                },
+                settings.AI_SERVICE_URL,
+                json=payload,
             )
             response.raise_for_status()
             data = response.json()
-            return data["choices"][0]["message"]["content"]
+            return data.get("response") or data.get("text") or str(data)
     except Exception as e:
-        logger.error(f"AI chat request failed: {e}")
-        return _mock_chat_response(user_message)
+        logger.error(f"Custom AI service request failed: {e}")
+        return ""
 
 
-async def generate_daily_report(
-    land_info: dict[str, Any],
-    weather_data: dict[str, Any],
-) -> dict[str, str]:
-    """Generate a daily farming report with warning and summary."""
-    if not settings.OPENAI_API_KEY:
-        return _mock_daily_report(land_info, weather_data)
+# --- 1. CHAT & WEBSOCKET ---
+async def get_chat_response(user_id: str, message: str) -> str:
+    """AI response for direct chat/websocket interaction."""
+    payload = {
+        "user_id": str(user_id),
+        "message": message,
+        "type": "chat"
+    }
+    response = await _call_custom_ai_service(payload)
+    return response if response else _mock_chat_response(message)
 
+
+# --- 2. DAILY ADVICE (REPORT PART) ---
+async def get_daily_advice(user_id: str, land_info: dict, weather_data: dict) -> str:
+    """AI advice for the periodic 24-hour task."""
     prompt = (
-        f"Generate a daily farming report for the following farm:\n\n"
-        f"Land Info:\n{json.dumps(land_info, indent=2)}\n\n"
-        f"Current Weather:\n{json.dumps(weather_data, indent=2)}\n\n"
-        f"Please provide:\n"
-        f"1. A concise WARNING about any risks (disease, weather, pests) — 1-2 sentences\n"
-        f"2. A REPORT with actionable recommendations for today — 3-5 sentences\n\n"
-        f"Respond as JSON with keys 'warning' and 'report_text'."
+        f"Daily Advice Request:\n"
+        f"Crop: {land_info.get('crop_type')}, Soil: {land_info.get('soil_type')}\n"
+        f"Weather: {weather_data.get('temperature')}C, {weather_data.get('humidity')}% humidity."
     )
+    payload = {
+        "user_id": str(user_id),
+        "message": prompt,
+        "type": "daily_advice"
+    }
+    response = await _call_custom_ai_service(payload)
+    return response if response else _mock_daily_advice(land_info, weather_data)
+
+
+async def _call_custom_ai_service_with_file(user_id: str, file: UploadFile) -> str:
+    """Helper to call the custom AI service with an uploaded file."""
+    if not settings.AI_SERVICE_URL:
+        logger.warning("AI_SERVICE_URL not set, falling back to mock")
+        return ""
 
     try:
+        content = await file.read()
+        await file.seek(0)
+
         async with httpx.AsyncClient(timeout=30.0) as client:
+            files = {"file": (file.filename, content, file.content_type)}
+            data = {
+                "user_id": str(user_id),
+                "type": "image_analysis"
+            }
             response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "gpt-4o-mini",
-                    "messages": [
-                        {"role": "system", "content": "You are an expert agricultural AI assistant. Respond only in valid JSON."},
-                        {"role": "user", "content": prompt},
-                    ],
-                    "max_tokens": 400,
-                    "temperature": 0.5,
-                    "response_format": {"type": "json_object"},
-                },
+                settings.AI_SERVICE_URL,
+                data=data,
+                files=files,
             )
             response.raise_for_status()
             data = response.json()
-            result = json.loads(data["choices"][0]["message"]["content"])
-            return {
-                "warning": result.get("warning", ""),
-                "report_text": result.get("report_text", ""),
-            }
+            return data.get("response") or data.get("text") or str(data)
     except Exception as e:
-        logger.error(f"AI report generation failed: {e}")
-        return _mock_daily_report(land_info, weather_data)
+        logger.error(f"Custom AI service request with file failed: {e}")
+        return ""
 
 
-def _mock_chat_response(user_message: str) -> str:
-    if "disease" in user_message.lower() or "sick" in user_message.lower():
-        return (
-            "Based on your description, your crop may be showing signs of a fungal infection. "
-            "Look for yellowing leaves, spots, or unusual growth patterns. "
-            "I recommend applying a copper-based fungicide and ensuring proper drainage. "
-            "Could you share an image for a more accurate diagnosis?"
-        )
-    if "weather" in user_message.lower():
-        return (
-            "Current weather conditions are important for your crops. "
-            "High humidity can promote fungal diseases, while drought stress can weaken plants. "
-            "Make sure to monitor soil moisture and adjust irrigation accordingly."
-        )
-    return (
-        "Thank you for your question! As your farming assistant, I'm here to help with crop health, "
-        "disease diagnosis, weather adaptation, and best farming practices. "
-        "Could you provide more details about your current situation so I can give you specific advice? "
-        "(Note: Set OPENAI_API_KEY in your .env for real AI responses.)"
-    )
+# --- 3. IMAGE ANALYSIS ---
+async def get_image_analysis(user_id: str, file: UploadFile) -> str:
+    """AI analysis for a specific crop/land image file."""
+    response = await _call_custom_ai_service_with_file(user_id, file)
+    return response if response else _mock_image_analysis()
 
 
-def _mock_daily_report(land_info: dict, weather_data: dict) -> dict[str, str]:
-    temp = weather_data.get("temperature", 25)
-    humidity = weather_data.get("humidity", 60)
-    crop = land_info.get("crop_type", "your crops")
+# --- MOCK FALLBACKS ---
 
-    warning = (
-        f"High humidity ({humidity}%) may increase risk of fungal disease for {crop}. "
-        f"Monitor plants closely and ensure good air circulation."
-        if humidity > 70
-        else f"Weather conditions look favorable for {crop} today."
-    )
+def _mock_chat_response(message: str) -> str:
+    return f"Mock Chat: I received your message '{message}'. Please configure AI_SERVICE_URL for real AI responses."
 
-    report_text = (
-        f"Today's temperature is {temp}°C with {humidity}% humidity. "
-        f"Recommended actions: check soil moisture levels, inspect {crop} for early signs of pest or disease, "
-        f"and ensure drainage is functioning properly. "
-        f"If irrigating, do so in the early morning to reduce fungal risk. "
-        f"Set OPENAI_API_KEY in your .env for AI-generated personalized reports."
-    )
+def _mock_daily_advice(land_info: dict, weather_data: dict) -> str:
+    crop = land_info.get('crop_type', 'crops')
+    return f"Mock Advice: Your {crop} look good today. Ensure regular irrigation given the {weather_data.get('temperature')}C temperature."
 
-    return {"warning": warning, "report_text": report_text}
+def _mock_image_analysis() -> str:
+    return "Mock Analysis: The image shows a healthy crop with no visible signs of disease."
+

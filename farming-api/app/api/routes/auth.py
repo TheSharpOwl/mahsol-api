@@ -28,6 +28,10 @@ async def signup(payload: UserSignupRequest, db: AsyncSession = Depends(get_db))
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    
+    # Trigger background task for soil profile calculation
+    from app.workers.tasks import calculate_soil_profile_task
+    calculate_soil_profile_task.delay(user.id, payload.latitude, payload.longitude)
 
     token = create_access_token({"sub": user.id, "role": user.role.value})
     return TokenResponse(

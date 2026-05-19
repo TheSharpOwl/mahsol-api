@@ -47,6 +47,8 @@ services:
       - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
       - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - HWSD_MDB_PATH=${HWSD_MDB_PATH:-HWSD2.mdb}
+      - HWSD_RASTER_PATH=${HWSD_RASTER_PATH:-HWSD2.bil}
       - DEBUG=${DEBUG:-false}
     depends_on:
       db:
@@ -70,6 +72,8 @@ services:
       - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
       - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - HWSD_MDB_PATH=${HWSD_MDB_PATH:-HWSD2.mdb}
+      - HWSD_RASTER_PATH=${HWSD_RASTER_PATH:-HWSD2.bil}
     depends_on:
       db:
         condition: service_healthy
@@ -92,6 +96,8 @@ services:
       - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
       - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - HWSD_MDB_PATH=${HWSD_MDB_PATH:-HWSD2.mdb}
+      - HWSD_RASTER_PATH=${HWSD_RASTER_PATH:-HWSD2.bil}
     depends_on:
       db:
         condition: service_healthy

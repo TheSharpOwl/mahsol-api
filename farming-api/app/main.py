@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 
 from app.core.config import settings
-from app.api.routes import auth, land_info, conversations, reports, chat
+from app.api.routes import auth, conversations, reports, chat, analysis, land_info
 
 logging.basicConfig(
     level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -46,10 +46,11 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
-app.include_router(land_info.router)
 app.include_router(conversations.router)
 app.include_router(reports.router)
 app.include_router(chat.router)
+app.include_router(analysis.router)
+app.include_router(land_info.router)
 
 
 @app.get("/healthz", tags=["Health"])

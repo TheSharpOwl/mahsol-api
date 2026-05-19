@@ -6,8 +6,15 @@ from app.db.session import async_session_factory
 from app.models.conversation import Conversation
 from app.models.message import Message, SenderType, MessageType
 from app.schemas.conversation import MessageResponse
+from app.schemas.chats import ChatRequest, ChatResponse
 from app.core.security import decode_token
 from app.services.ai_service import get_chat_response
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.db.session import get_db
+from app.models.user import User
+from app.core.security import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -40,21 +47,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-async def _build_conversation_history(conversation_id: str) -> list[dict]:
-    """Load all existing messages from a conversation and format for the AI."""
-    async with async_session_factory() as db:
-        result = await db.execute(
-            select(Message)
-            .where(Message.conversation_id == conversation_id)
-            .order_by(Message.created_at)
-        )
-        messages = result.scalars().all()
-
-    history = []
-    for msg in messages:
-        role = "user" if msg.sender_type == SenderType.user else "assistant"
-        history.append({"role": role, "content": msg.content})
-    return history
+# Conversation history is no longer sent to the AI service.
 
 
 @router.websocket("/ws/chat/{conversation_id}")
@@ -122,9 +115,8 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
                 await websocket.send_text(json.dumps({"error": "Empty message"}))
                 continue
 
-            # ── 5. Load conversation history BEFORE saving new message ──
-            #       (get_chat_response appends the current user message itself)
-            conversation_history = await _build_conversation_history(conversation_id)
+            # ── 5. AI Call ──
+            # (History is no longer used per user request)
 
             # ── 6. Save user message to DB ──
             async with async_session_factory() as db:
@@ -149,16 +141,9 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
                 conversation_id, {"type": "typing", "data": {"is_typing": True}}
             )
 
-            # ── 8. Get AI response with full conversation history ──
-            if message_type == MessageType.text:
-                ai_reply_text = await get_chat_response(content, conversation_history)
-            else:
-                ai_reply_text = (
-                    "I've received your image. Based on what I can see, this appears "
-                    "to show signs of possible disease or stress in your crop. "
-                    "Please share more details about when you first noticed this and "
-                    "the affected area size for a more precise diagnosis."
-                )
+            # ── 8. Get AI response (user_id, message) ──
+            ai_reply_text = await get_chat_response(user_id, content)
+
 
             # ── 9. Save AI reply to DB ──
             async with async_session_factory() as db:
@@ -188,3 +173,67 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(conversation_id, websocket)
 
+
+@router.post("/chat/{conversation_id}", response_model=ChatResponse)
+async def chat(
+    conversation_id: str,
+    body: ChatRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # ── 1. Validate ──
+    message_type = (
+        MessageType.image if body.message_type == "image" else MessageType.text
+    )
+
+    if not body.content:
+        raise HTTPException(status_code=400, detail="Content is required")
+
+    # ── 2. Resolve conversation ──
+    if conversation_id == "new":
+        conversation = Conversation(user_id=current_user.id)
+        db.add(conversation)
+        await db.commit()
+        await db.refresh(conversation)
+    else:
+        result = await db.execute(
+            select(Conversation).where(
+                Conversation.id == conversation_id,
+                Conversation.user_id == current_user.id,
+            )
+        )
+        conversation = result.scalar_one_or_none()
+
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # ── 3. Save user message ──
+    user_msg = Message(
+        conversation_id=conversation.id,
+        sender_type=SenderType.user,
+        message_type=message_type,
+        content=body.content,
+    )
+    db.add(user_msg)
+    await db.commit()
+    await db.refresh(user_msg)
+
+    # ── 4. Get AI response (user_id, message) ──
+    ai_reply_text = await get_chat_response(current_user.id, body.content)
+
+    # ── 6. Save AI message ──
+    ai_msg = Message(
+        conversation_id=conversation.id,
+        sender_type=SenderType.ai,
+        message_type=MessageType.text,
+        content=ai_reply_text,
+    )
+    db.add(ai_msg)
+    await db.commit()
+    await db.refresh(ai_msg)
+
+    # ── 7. Return ──
+    return {
+        "user_message": MessageResponse.model_validate(user_msg),
+        "ai_message": MessageResponse.model_validate(ai_msg),
+    }

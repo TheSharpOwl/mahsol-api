@@ -20,6 +20,10 @@ class Settings(BaseSettings):
 
     OPENWEATHER_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
+    AI_SERVICE_URL: Optional[str] = None
+
+    HWSD_MDB_PATH: str = "HWSD2.mdb"
+    HWSD_RASTER_PATH: str = "HWSD2.bil"
 
     class Config:
         env_file = ".env"

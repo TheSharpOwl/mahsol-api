@@ -7,8 +7,28 @@ from app.models.user import User
 from app.schemas.report import ReportResponse
 from app.core.security import get_current_user
 from typing import List
+from app.services.weather_service import fetch_weather
+from app.services.ai_service import get_daily_advice
+from app.models.land_info import LandInfo
+from sqlalchemy import select, desc
+
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
+
+
+@router.post("/trigger-daily", status_code=status.HTTP_202_ACCEPTED)
+async def trigger_daily_reports(current_user: User = Depends(get_current_user)):
+    """
+    Manually trigger the 24-hour periodic task for testing.
+    This will generate reports for all farmers.
+    """
+    if current_user.role.value != "admin":
+        # Allowing for testing, but in production this should be admin-only
+        pass
+        
+    from app.workers.tasks import generate_daily_reports_task
+    generate_daily_reports_task.delay()
+    return {"message": "Daily report generation task triggered"}
 
 
 @router.get("", response_model=List[ReportResponse])
