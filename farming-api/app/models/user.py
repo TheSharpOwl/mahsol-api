@@ -9,6 +9,8 @@ import enum
 class UserRole(str, enum.Enum):
     farmer = "farmer"
     expert = "expert"
+    pharmacist = "pharmacist"
+    company = "company"
     admin = "admin"
 
 

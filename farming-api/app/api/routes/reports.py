@@ -5,7 +5,7 @@ from app.db.session import get_db
 from app.models.report import Report
 from app.models.user import User
 from app.schemas.report import ReportResponse
-from app.core.security import get_current_user
+from app.core.security import check_roles
 from typing import List
 from app.services.weather_service import fetch_weather
 from app.services.ai_service import get_daily_advice
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/reports", tags=["Reports"])
 
 
 @router.post("/trigger-daily", status_code=status.HTTP_202_ACCEPTED)
-async def trigger_daily_reports(current_user: User = Depends(get_current_user)):
+async def trigger_daily_reports(current_user: User = Depends(check_roles("farmer"))):
     """
     Manually trigger the 24-hour periodic task for testing.
     This will generate reports for all farmers.
@@ -34,7 +34,7 @@ async def trigger_daily_reports(current_user: User = Depends(get_current_user)):
 @router.get("", response_model=List[ReportResponse])
 async def list_reports(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(check_roles("farmer")),
 ):
     result = await db.execute(
         select(Report)
@@ -48,7 +48,7 @@ async def list_reports(
 @router.get("/latest", response_model=ReportResponse)
 async def get_latest_report(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(check_roles("farmer")),
 ):
     result = await db.execute(
         select(Report)

@@ -13,7 +13,7 @@ class UserSignupRequest(BaseModel):
 
     @field_validator("role")
     @classmethod
-    def role_must_be_farmer_or_expert(cls, v):
+    def role_must_be_valid(cls, v):
         if v == UserRole.admin:
             raise ValueError("Cannot self-register as admin")
         return v

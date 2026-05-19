@@ -7,14 +7,13 @@ from app.models.conversation import Conversation
 from app.models.message import Message, SenderType, MessageType
 from app.schemas.conversation import MessageResponse
 from app.schemas.chats import ChatRequest, ChatResponse
-from app.core.security import decode_token
+from app.core.security import decode_token, check_roles
 from app.services.ai_service import get_chat_response
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.session import get_db
 from app.models.user import User
-from app.core.security import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +59,7 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
         return
 
     payload = decode_token(token)
-    if not payload:
+    if not payload or payload.get("role") != "farmer":
         await websocket.close(code=4001)
         return
 
@@ -179,7 +178,7 @@ async def chat(
     conversation_id: str,
     body: ChatRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(check_roles("farmer")),
 ):
     # ── 1. Validate ──
     message_type = (

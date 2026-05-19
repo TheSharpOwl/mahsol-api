@@ -6,7 +6,7 @@ from app.db.session import get_db
 from app.models.conversation import Conversation
 from app.models.user import User
 from app.schemas.conversation import ConversationResponse, ConversationCreate, ConversationWithMessages
-from app.core.security import get_current_user
+from app.core.security import check_roles
 from typing import List
 
 router = APIRouter(prefix="/conversations", tags=["Conversations"])
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/conversations", tags=["Conversations"])
 async def create_conversation(
     payload: ConversationCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(check_roles("farmer")),
 ):
     conversation = Conversation(user_id=current_user.id)
     db.add(conversation)
@@ -28,7 +28,7 @@ async def create_conversation(
 @router.get("", response_model=List[ConversationWithMessages])
 async def list_conversations(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(check_roles("farmer")),
 ):
     result = await db.execute(
         select(Conversation)

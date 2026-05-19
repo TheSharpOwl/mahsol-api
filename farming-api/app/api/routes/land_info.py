@@ -5,7 +5,7 @@ from app.db.session import get_db
 from app.models.land_info import LandInfo
 from app.models.user import User
 from app.schemas.land_info import LandInfoCreate, LandInfoResponse, LandInfoUpdate
-from app.core.security import get_current_user
+from app.core.security import check_roles
 from app.services.weather_service import fetch_weather
 from app.workers.tasks import calculate_soil_profile_task
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/land-info", tags=["Land Info"])
 async def create_or_update_land_info(
     payload: LandInfoCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(check_roles("farmer")),
 ):
     """
     Create or update land info for the current user.
@@ -63,7 +63,7 @@ async def create_or_update_land_info(
 @router.get("", response_model=list[LandInfoResponse])
 async def list_all_land_info(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(check_roles("farmer")),
 ):
     """
     Get all land information records for the currently authenticated user.
@@ -78,7 +78,7 @@ async def list_all_land_info(
 @router.get("/me", response_model=LandInfoResponse)
 async def get_my_land_info(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(check_roles("farmer")),
 ):
     """
     Get the most recent land info for the currently authenticated user.

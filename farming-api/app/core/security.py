@@ -67,3 +67,20 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
 
     return user
+
+
+def check_roles(*allowed_roles: str):
+    """
+    Dependency to restrict endpoint access to specific roles.
+    
+    Usage:
+        @router.get("/some-endpoint", dependencies=[Depends(check_roles("expert", "company"))])
+    """
+    async def role_checker(current_user = Depends(get_current_user)):
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to access this resource."
+            )
+        return current_user
+    return role_checker

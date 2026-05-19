@@ -63,13 +63,13 @@
         .setup-overlay .logo { font-size: 48px; }
         .setup-overlay h2 { font-size: 20px; font-weight: 700; color: var(--primary); }
         .setup-overlay p { font-size: 13px; color: var(--text-muted); text-align: center; line-height: 1.5; }
-        .setup-overlay input {
+        .setup-overlay input, .setup-overlay textarea {
             width: 100%; padding: 14px 16px; border-radius: 14px;
             background: var(--surface); border: 1px solid var(--border);
             color: var(--text); font-size: 14px; font-family: inherit;
         }
-        .setup-overlay input:focus { outline: none; border-color: var(--primary); }
-        .setup-overlay input::placeholder { color: var(--text-muted); }
+        .setup-overlay input:focus, .setup-overlay textarea:focus { outline: none; border-color: var(--primary); }
+        .setup-overlay input::placeholder, .setup-overlay textarea::placeholder { color: var(--text-muted); }
         .setup-btn {
             width: 100%; padding: 14px; border: none; border-radius: 14px;
             background: var(--primary); color: #000; font-size: 15px;
@@ -208,10 +208,11 @@
     <div class="setup-overlay" id="setup">
         <div class="logo">🌾</div>
         <h2>Mahsol Assistant</h2>
-        <p>Paste your JWT token below to connect.<br/>The WebSocket will auto-create a new conversation.</p>
+        <p>Paste your JWT token and describe the issue to ask AI.</p>
         <input id="tokenInput" placeholder="Paste JWT token here..." />
         <input id="serverInput" value="ws://localhost:8000" placeholder="Server URL" />
-        <button class="setup-btn" onclick="startChat()">Start Chat</button>
+        <textarea id="issueInput" placeholder="Describe the issue / summarize the topic here..." rows="3" style="resize: none;"></textarea>
+        <button class="setup-btn" onclick="startChat()">Ask AI</button>
     </div>
 
     <!-- Header -->
@@ -253,9 +254,12 @@ let pendingImage = null;  // base64
 let token = '';
 let serverUrl = '';
 
+let initialIssue = '';
+
 function startChat() {
     token = document.getElementById('tokenInput').value.trim();
     serverUrl = document.getElementById('serverInput').value.trim().replace(/\/+$/, '');
+    initialIssue = document.getElementById('issueInput').value.trim();
     if (!token) { alert('Paste a JWT token first'); return; }
 
     document.getElementById('setup').classList.add('hidden');
@@ -280,6 +284,13 @@ function connectWS() {
             convId = msg.conversation_id;
             setStatus('online');
             addSystem('Connected — new conversation started');
+            
+            // Auto-send the issue summary once the WebSocket starts
+            if (initialIssue) {
+                const payload = { content: initialIssue, message_type: 'text' };
+                ws.send(JSON.stringify(payload));
+                initialIssue = ''; // clear it so it won't send again if we reconnect
+            }
         } else if (msg.type === 'typing') {
             showTyping(msg.data.is_typing);
         } else if (msg.type === 'message') {
