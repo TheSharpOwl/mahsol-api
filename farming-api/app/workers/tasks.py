@@ -64,30 +64,31 @@ async def _generate_farmer_report(farmer: User):
         )
         land = result.scalar_one_or_none()
 
-    if not land:
-        logger.info(f"Farmer {farmer.id} has no land info, skipping report")
-        return
+    if land:
+        land_data = {
+            "latitude": land.latitude,
+            "longitude": land.longitude,
+            "soil_type": land.soil_type,
+            "crop_type": land.crop_type,
+            "additional_notes": land.additional_notes,
+            "soil_texture": land.soil_texture,
+            "sand_percent": land.sand_percent,
+            "silt_percent": land.silt_percent,
+            "clay_percent": land.clay_percent,
+            "ph": land.ph,
+            "organic_carbon": land.organic_carbon,
+            "cation_exchange_capacity": land.cation_exchange_capacity,
+            "bulk_density": land.bulk_density,
+            "electrical_conductivity": land.electrical_conductivity,
+            "gypsum_content": land.gypsum_content,
+            "available_water_capacity": land.available_water_capacity,
+        }
+        weather_data = await fetch_weather(land.latitude, land.longitude)
+    else:
+        logger.info(f"Farmer {farmer.id} has no land info, generating report without it")
+        land_data = None
+        weather_data = {}
 
-    land_data = {
-        "latitude": land.latitude,
-        "longitude": land.longitude,
-        "soil_type": land.soil_type,
-        "crop_type": land.crop_type,
-        "additional_notes": land.additional_notes,
-        "soil_texture": land.soil_texture,
-        "sand_percent": land.sand_percent,
-        "silt_percent": land.silt_percent,
-        "clay_percent": land.clay_percent,
-        "ph": land.ph,
-        "organic_carbon": land.organic_carbon,
-        "cation_exchange_capacity": land.cation_exchange_capacity,
-        "bulk_density": land.bulk_density,
-        "electrical_conductivity": land.electrical_conductivity,
-        "gypsum_content": land.gypsum_content,
-        "available_water_capacity": land.available_water_capacity,
-    }
-
-    weather_data = await fetch_weather(land.latitude, land.longitude)
     report_text = await get_daily_advice(farmer.id, land_data, weather_data or {})
 
     async with async_session_factory() as db:
@@ -108,6 +109,12 @@ def calculate_soil_profile_task(user_id: str, lat: float, lon: float):
     logger.info(f"Starting soil profile calculation for user {user_id}")
     try:
         with SessionLocal() as db:
+            # Check user role - only run for farmers
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user or user.role != UserRole.farmer:
+                logger.info(f"User {user_id} is not a farmer, skipping soil profile calculation")
+                return
+
             # Check if LandInfo already exists
             existing = db.query(LandInfo).filter(LandInfo.user_id == user_id).first()
             if existing:

@@ -6,7 +6,7 @@ import logging
 import os
 
 from app.core.config import settings
-from app.api.routes import auth, conversations, reports, chat, analysis, land_info
+from app.api.routes import auth, conversations, reports, chat, analysis, land_info, products, illnesses
 from app.core.security import check_roles
 
 logging.basicConfig(
@@ -20,11 +20,18 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting Farming Assistant API...")
-    from app.db.session import async_engine
+    from app.db.session import async_engine, async_session_factory
     from app.db.base import Base
+    from app.db.seed import seed_illnesses
+
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
+
+    # Seed data
+    async with async_session_factory() as session:
+        await seed_illnesses(session)
+    logger.info("Illnesses seeded")
     yield
     logger.info("Shutting down Farming Assistant API")
     await async_engine.dispose()
@@ -54,6 +61,8 @@ app.include_router(reports.router)
 app.include_router(chat.router)
 app.include_router(analysis.router)
 app.include_router(land_info.router)
+app.include_router(products.router)
+app.include_router(illnesses.router)
 
 
 @app.get("/healthz", tags=["Health"])

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.session import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.user import UserSignupRequest, UserLoginRequest, UserResponse, TokenResponse
 from app.core.security import hash_password, verify_password, create_access_token
 
@@ -29,9 +29,10 @@ async def signup(payload: UserSignupRequest, db: AsyncSession = Depends(get_db))
     await db.commit()
     await db.refresh(user)
     
-    # Trigger background task for soil profile calculation
-    from app.workers.tasks import calculate_soil_profile_task
-    calculate_soil_profile_task.delay(user.id, payload.latitude, payload.longitude)
+    # Trigger background task for soil profile calculation (only for farmers)
+    if user.role == UserRole.farmer:
+        from app.workers.tasks import calculate_soil_profile_task
+        calculate_soil_profile_task.delay(user.id, payload.latitude, payload.longitude)
 
     token = create_access_token({"sub": user.id, "role": user.role.value})
     return TokenResponse(

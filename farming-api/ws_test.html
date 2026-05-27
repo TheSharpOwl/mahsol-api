@@ -295,7 +295,7 @@ function connectWS() {
             showTyping(msg.data.is_typing);
         } else if (msg.type === 'message') {
             const d = msg.data;
-            addBubble(d.sender_type, d.content, d.message_type, d.created_at);
+            addBubble(d.sender_type, d.content, d.message_type, d.created_at, d.action, d.products);
         } else if (msg.error) {
             addSystem('⚠ ' + msg.error);
         }
@@ -372,7 +372,7 @@ function clearImage() {
 }
 
 /* ── UI helpers ── */
-function addBubble(sender, content, msgType, timestamp) {
+function addBubble(sender, content, msgType, timestamp, action, products) {
     removeTyping();
     const row = document.createElement('div');
     row.className = `msg-row ${sender === 'user' ? 'user' : 'ai'}`;
@@ -387,6 +387,21 @@ function addBubble(sender, content, msgType, timestamp) {
         bubble.appendChild(img);
     } else {
         bubble.textContent = content;
+    }
+
+    if (action && action !== "message") {
+        const actionDiv = document.createElement('div');
+        actionDiv.style.marginTop = '8px';
+        actionDiv.style.padding = '8px';
+        actionDiv.style.background = 'var(--surface)';
+        actionDiv.style.borderRadius = '8px';
+        actionDiv.style.fontSize = '12px';
+        actionDiv.innerHTML = `<strong>Action:</strong> ${action}`;
+        
+        if (products && products.length > 0) {
+            actionDiv.innerHTML += `<br/><strong>Recommended Products:</strong><ul style="margin-top:4px; padding-left:16px;">` + products.map(p => `<li>${p.name}</li>`).join('') + `</ul>`;
+        }
+        bubble.appendChild(actionDiv);
     }
 
     const time = document.createElement('div');

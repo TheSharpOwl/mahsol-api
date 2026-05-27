@@ -14,6 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.session import get_db
 from app.models.user import User
+from app.models.product import Product
+from app.schemas.product import ProductResponse
 
 logger = logging.getLogger(__name__)
 
@@ -141,8 +143,10 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
             )
 
             # ── 8. Get AI response (user_id, message) ──
-            ai_reply_text = await get_chat_response(user_id, content)
-
+            ai_reply_data = await get_chat_response(user_id, content)
+            answer = ai_reply_data.get("answer", "")
+            action = ai_reply_data.get("action", "message")
+            illness_id = ai_reply_data.get("illness_id")
 
             # ── 9. Save AI reply to DB ──
             async with async_session_factory() as db:
@@ -150,9 +154,18 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
                     conversation_id=conversation_id,
                     sender_type=SenderType.ai,
                     message_type=MessageType.text,
-                    content=ai_reply_text,
+                    content=answer,
                 )
                 db.add(ai_msg)
+                
+                products_data = []
+                if action == "ask_for_product" and illness_id is not None:
+                    logger.info(f"Chat WS: Resolving products for illness_id={illness_id}")
+                    result = await db.execute(select(Product).where(Product.illness_id == illness_id))
+                    products = result.scalars().all()
+                    products_data = [ProductResponse.model_validate(p).model_dump(mode="json") for p in products]
+                    logger.info(f"Chat WS: Found {len(products)} products")
+                
                 await db.commit()
                 await db.refresh(ai_msg)
 
@@ -161,6 +174,9 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
                 conversation_id, {"type": "typing", "data": {"is_typing": False}}
             )
             ai_msg_data = MessageResponse.model_validate(ai_msg).model_dump(mode="json")
+            ai_msg_data["action"] = action
+            ai_msg_data["products"] = products_data
+            
             await manager.send_message(
                 conversation_id, {"type": "message", "data": ai_msg_data}
             )
@@ -218,16 +234,27 @@ async def chat(
     await db.refresh(user_msg)
 
     # ── 4. Get AI response (user_id, message) ──
-    ai_reply_text = await get_chat_response(current_user.id, body.content)
+    ai_reply_data = await get_chat_response(current_user.id, body.content)
+    answer = ai_reply_data.get("answer", "")
+    action = ai_reply_data.get("action", "message")
+    illness_id = ai_reply_data.get("illness_id")
 
     # ── 6. Save AI message ──
     ai_msg = Message(
         conversation_id=conversation.id,
         sender_type=SenderType.ai,
         message_type=MessageType.text,
-        content=ai_reply_text,
+        content=answer,
     )
     db.add(ai_msg)
+    
+    products_data = []
+    if action == "ask_for_product" and illness_id is not None:
+        logger.info(f"Chat REST: Resolving products for illness_id={illness_id}")
+        result = await db.execute(select(Product).where(Product.illness_id == illness_id))
+        products_data = result.scalars().all()
+        logger.info(f"Chat REST: Found {len(products_data)} products")
+        
     await db.commit()
     await db.refresh(ai_msg)
 
@@ -235,4 +262,6 @@ async def chat(
     return {
         "user_message": MessageResponse.model_validate(user_msg),
         "ai_message": MessageResponse.model_validate(ai_msg),
+        "action": action,
+        "products": [ProductResponse.model_validate(p) for p in products_data]
     }

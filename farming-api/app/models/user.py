@@ -29,3 +29,8 @@ class User(Base):
     land_info = relationship("LandInfo", back_populates="user", cascade="all, delete-orphan")
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
     reports = relationship("Report", back_populates="user", cascade="all, delete-orphan")
+    products = relationship(
+        "Product",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )

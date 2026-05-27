@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mahsol AI – Mock Test Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --surface2: #1a2236;
+            --surface3: #1e293b;
+            --border: #1e2a40;
+            --primary: #22c55e;
+            --primary-dim: #166534;
+            --primary-glow: rgba(34, 197, 94, 0.15);
+            --accent: #3b82f6;
+            --accent-dim: #1e3a5f;
+            --warning: #f59e0b;
+            --warning-dim: #78350f;
+            --danger: #ef4444;
+            --danger-dim: #7f1d1d;
+            --text: #e8ecf4;
+            --text-muted: #64748b;
+            --text-dim: #475569;
+            --bubble-user: #1b3a26;
+            --bubble-ai: #1a2236;
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ─── Layout ─── */
+        .layout {
+            display: grid;
+            grid-template-columns: 320px 1fr 380px;
+            width: 100%;
+            height: 100vh;
+            gap: 0;
+        }
+
+        @media (max-width: 1100px) {
+            .layout { grid-template-columns: 1fr; }
+            .sidebar, .log-panel { display: none; }
+        }
+
+        /* ─── Sidebar: Test Scenarios ─── */
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), #4ade80);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .scenarios {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .scenarios::-webkit-scrollbar { width: 4px; }
+        .scenarios::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .scenario-group-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-dim);
+            padding: 12px 8px 4px;
+        }
+
+        .scenario-btn {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface2);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .scenario-btn:hover {
+            border-color: var(--primary);
+            background: rgba(34, 197, 94, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .scenario-btn:active {
+            transform: translateY(0);
+        }
+
+        .scenario-btn .icon {
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .scenario-btn .info {
+            flex: 1;
+        }
+
+        .scenario-btn .title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        .scenario-btn .desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .scenario-btn .badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            align-self: center;
+        }
+
+        .badge-message { background: var(--accent-dim); color: var(--accent); }
+        .badge-product { background: var(--primary-dim); color: var(--primary); }
+        .badge-expert { background: var(--warning-dim); color: var(--warning); }
+        .badge-image { background: var(--danger-dim); color: var(--danger); }
+
+        /* ─── Mode toggle ─── */
+        .mode-section {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .mode-toggle {
+            display: flex;
+            background: var(--surface2);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .mode-toggle button {
+            flex: 1;
+            padding: 10px 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-toggle button.active {
+            background: var(--primary-dim);
+            color: var(--primary);
+        }
+
+        .server-input-section {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            display: none;
+        }
+
+        .server-input-section.visible { display: block; }
+
+        .server-input-section label {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .server-input-section input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .server-input-section input:focus { outline: none; border-color: var(--primary); }
+
+        /* ─── Chat Panel ─── */
+        .chat-panel {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .chat-header .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-dim), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            box-shadow: 0 0 16px var(--primary-glow);
+        }
+
+        .chat-header .info { flex: 1; }
+        .chat-header .name { font-weight: 700; font-size: 16px; }
+        .chat-header .subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-pill .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .status-pill.connected { background: rgba(34,197,94,0.1); color: var(--primary); }
+        .status-pill.connected .dot { background: var(--primary); box-shadow: 0 0 6px var(--primary); }
+        .status-pill.disconnected { background: rgba(239,68,68,0.1); color: var(--danger); }
+        .status-pill.disconnected .dot { background: var(--danger); }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .msg-row {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+            animation: fadeUp 0.3s ease;
+        }
+
+        .msg-row.user { align-self: flex-end; align-items: flex-end; }
+        .msg-row.ai { align-self: flex-start; align-items: flex-start; }
+
+        .bubble {
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .msg-row.user .bubble {
+            background: var(--bubble-user);
+            border-radius: var(--radius) var(--radius) 6px var(--radius);
+            border: 1px solid rgba(34, 197, 94, 0.15);
+        }
+
+        .msg-row.ai .bubble {
+            background: var(--bubble-ai);
+            border-radius: var(--radius) var(--radius) var(--radius) 6px;
+            border: 1px solid var(--border);
+        }
+
+        .bubble img {
+            max-width: 100%;
+            border-radius: 12px;
+            display: block;
+            margin-top: 6px;
+        }
+
+        .msg-time {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+
+        .action-card {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            font-size: 12px;
+        }
+
+        .action-card .action-label {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        .action-card.action-product .action-label { color: var(--primary); }
+        .action-card.action-expert .action-label { color: var(--warning); }
+
+        .action-card .product-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .action-card .product-list li {
+            padding: 6px 10px;
+            background: var(--surface2);
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-card .product-list li::before {
+            content: '💊';
+            font-size: 12px;
+        }
+
+        .system-msg {
+            align-self: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--surface);
+            padding: 6px 16px;
+            border-radius: 20px;
+            animation: fadeUp 0.25s ease;
+            border: 1px solid var(--border);
+        }
+
+        /* Typing */
+        .typing-row { align-self: flex-start; animation: fadeUp 0.2s ease; }
+        .typing-dots {
+            display: flex;
+            gap: 5px;
+            padding: 14px 18px;
+            background: var(--bubble-ai);
+            border-radius: var(--radius) var(--radius) var(--radius) 6px;
+            border: 1px solid var(--border);
+        }
+        .typing-dots span {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);
+            animation: bounce 1.4s infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        /* Input bar */
+        .input-bar {
+            padding: 12px 16px 16px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .input-bar textarea {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: 22px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+            line-height: 1.4;
+        }
+
+        .input-bar textarea:focus { outline: none; border-color: var(--primary); }
+        .input-bar textarea::placeholder { color: var(--text-muted); }
+
+        .input-bar .send-btn {
+            width: 44px; height: 44px; border-radius: 50%; border: none;
+            background: var(--primary); color: #000; font-size: 18px;
+            cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.1s, opacity 0.15s;
+            font-weight: 700;
+        }
+
+        .input-bar .send-btn:active { transform: scale(0.9); }
+        .input-bar .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ─── Log Panel ─── */
+        .log-panel {
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .log-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .log-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-header h3::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            background: var(--accent);
+        }
+
+        .clear-log-btn {
+            padding: 5px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .clear-log-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+        .log-entries {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 11px;
+        }
+
+        .log-entries::-webkit-scrollbar { width: 4px; }
+        .log-entries::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .log-entry {
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            animation: fadeUp 0.2s ease;
+            border-left: 3px solid transparent;
+            line-height: 1.5;
+        }
+
+        .log-entry .log-time {
+            color: var(--text-dim);
+            font-size: 10px;
+        }
+
+        .log-entry .log-dir {
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .log-entry.log-send { background: rgba(59,130,246,0.05); border-left-color: var(--accent); }
+        .log-entry.log-send .log-dir { color: var(--accent); }
+
+        .log-entry.log-recv { background: rgba(34,197,94,0.05); border-left-color: var(--primary); }
+        .log-entry.log-recv .log-dir { color: var(--primary); }
+
+        .log-entry.log-sys { background: rgba(245,158,11,0.05); border-left-color: var(--warning); }
+        .log-entry.log-sys .log-dir { color: var(--warning); }
+
+        .log-entry.log-err { background: rgba(239,68,68,0.05); border-left-color: var(--danger); }
+        .log-entry.log-err .log-dir { color: var(--danger); }
+
+        .log-entry pre {
+            margin-top: 4px;
+            color: var(--text-muted);
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 10px;
+        }
+
+        /* ─── Image preview ─── */
+        .image-preview {
+            display: none;
+            padding: 8px 16px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .image-preview.active {
+            display: flex;
+        }
+        .image-preview img {
+            height: 56px;
+            max-width: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .image-preview .remove-img {
+            margin-left: auto;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: var(--danger);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ─── Animations ─── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            padding: 8px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .stats-bar .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stats-bar .stat-value {
+            font-weight: 700;
+            color: var(--text);
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <!-- ─── Left Sidebar: Test Scenarios ─── -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>🌾 Mock Test Suite</h1>
+            <p>Test all AI response cases without a real backend</p>
+        </div>
+
+        <div class="scenarios">
+            <div class="scenario-group-label">💬 Chat Responses</div>
+
+            <button class="scenario-btn" onclick="runScenario('message')">
+                <span class="icon">💬</span>
+                <div class="info">
+                    <div class="title">Regular Message</div>
+                    <div class="desc">Generic chat — AI replies with mock text</div>
+                </div>
+                <span class="badge badge-message">Message</span>
+            </button>
+
+            <button class="scenario-btn" onclick="runScenario('product')">
+                <span class="icon">💊</span>
+                <div class="info">
+                    <div class="title">Product Recommendation</div>
+                    <div class="desc">Triggers "ask_for_product" action with illness_id + product list</div>
+                </div>
+                <span class="badge badge-product">Product</span>
+            </button>
+
+            <button class="scenario-btn" onclick="runScenario('expert')">
+                <span class="icon">👨‍🔬</span>
+                <div class="info">
+                    <div class="title">Call Expert</div>
+                    <div class="desc">Triggers "call_expert" action — AI can't answer</div>
+                </div>
+                <span class="badge badge-expert">Expert</span>
+            </button>
+
+            <div class="scenario-group-label">🖼️ Image Analysis</div>
+
+            <button class="scenario-btn" onclick="runScenario('image_healthy')">
+                <span class="icon">🌿</span>
+                <div class="info">
+                    <div class="title">Healthy Crop</div>
+                    <div class="desc">Image analysis returns no disease detected</div>
+                </div>
+                <span class="badge badge-image">Image</span>
+            </button>
+
+            <button class="scenario-btn" onclick="runScenario('image_disease')">
+                <span class="icon">🍂</span>
+                <div class="info">
+                    <div class="title">Disease Detected</div>
+                    <div class="desc">Image analysis finds Late Blight + products</div>
+                </div>
+                <span class="badge badge-image">Image</span>
+            </button>
+
+            <div class="scenario-group-label">⚠️ Edge Cases</div>
+
+            <button class="scenario-btn" onclick="runScenario('empty')">
+                <span class="icon">🚫</span>
+                <div class="info">
+                    <div class="title">Empty Message</div>
+                    <div class="desc">Send empty content — expect error response</div>
+                </div>
+                <span class="badge badge-message">Edge</span>
+            </button>
+
+            <button class="scenario-btn" onclick="runScenario('long')">
+                <span class="icon">📜</span>
+                <div class="info">
+                    <div class="title">Long Message</div>
+                    <div class="desc">Send a very long message to test overflow</div>
+                </div>
+                <span class="badge badge-message">Edge</span>
+            </button>
+
+            <button class="scenario-btn" onclick="runScenario('rapid')">
+                <span class="icon">⚡</span>
+                <div class="info">
+                    <div class="title">Rapid Fire</div>
+                    <div class="desc">Send 5 messages quickly to test concurrency</div>
+                </div>
+                <span class="badge badge-message">Edge</span>
+            </button>
+
+            <button class="scenario-btn" onclick="runScenario('no_products')">
+                <span class="icon">📭</span>
+                <div class="info">
+                    <div class="title">Product (No Results)</div>
+                    <div class="desc">ask_for_product with illness_id that has no products in DB</div>
+                </div>
+                <span class="badge badge-product">Edge</span>
+            </button>
+
+            <div class="scenario-group-label">🔁 Full Flows</div>
+
+            <button class="scenario-btn" onclick="runScenario('full_flow')">
+                <span class="icon">🔄</span>
+                <div class="info">
+                    <div class="title">Complete Flow</div>
+                    <div class="desc">Runs all 3 cases sequentially: message → product → expert</div>
+                </div>
+                <span class="badge badge-message">Auto</span>
+            </button>
+        </div>
+
+        <div class="mode-section">
+            <div class="mode-toggle">
+                <button id="mockModeBtn" class="active" onclick="setMode('mock')">🧪 Mock Mode</button>
+                <button id="liveModeBtn" onclick="setMode('live')">🔌 Live Server</button>
+            </div>
+        </div>
+
+        <div class="server-input-section" id="serverSection">
+            <label>Server URL</label>
+            <input id="serverUrl" value="ws://localhost:8000" placeholder="ws://localhost:8000" />
+            <label style="margin-top: 8px;">JWT Token</label>
+            <input id="jwtToken" placeholder="Paste JWT token..." />
+            <button class="scenario-btn" onclick="connectLive()" style="width:100%; margin-top:12px; justify-content:center; background:var(--primary); color:#000; font-weight:700; border:none;">
+                ⚡ Connect to Live Server
+            </button>
+        </div>
+    </div>
+
+    <!-- ─── Center: Chat ─── -->
+    <div class="chat-panel">
+        <div class="chat-header">
+            <div class="avatar">🌱</div>
+            <div class="info">
+                <div class="name">Mahsol AI</div>
+                <div class="subtitle" id="modeLabel">Mock Mode — no server needed</div>
+            </div>
+            <div class="status-pill connected" id="statusPill">
+                <span class="dot"></span>
+                <span id="statusText">Mock Ready</span>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="messages"></div>
+
+        <!-- Image preview -->
+        <div class="image-preview" id="imgPreview">
+            <img id="previewImg" src="" />
+            <span style="font-size:13px;color:var(--text-muted)">Image attached</span>
+            <button class="remove-img" onclick="clearImage()">✕</button>
+        </div>
+
+        <div class="input-bar">
+            <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Attach image" style="width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--surface2); color: var(--text-muted); font-size: 20px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: color 0.15s;">📷</button>
+            <input type="file" id="fileInput" accept="image/*" onchange="previewImage(event)" style="display: none;" />
+            <textarea id="msgInput" rows="1" placeholder="Type a message or use a test scenario..." oninput="autoResize(this)"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendManual()">➤</button>
+        </div>
+    </div>
+
+    <!-- ─── Right: Log Panel ─── -->
+    <div class="log-panel">
+        <div class="log-header">
+            <h3>Protocol Log</h3>
+            <button class="clear-log-btn" onclick="clearLog()">Clear</button>
+        </div>
+        <div class="log-entries" id="logEntries"></div>
+        <div class="stats-bar">
+            <div class="stat">Sent: <span class="stat-value" id="statSent">0</span></div>
+            <div class="stat">Recv: <span class="stat-value" id="statRecv">0</span></div>
+            <div class="stat">Errors: <span class="stat-value" id="statErr">0</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════ */
+let mode = 'mock';       // 'mock' | 'live'
+let ws = null;
+let convId = 'mock-conv-001';
+let stats = { sent: 0, recv: 0, err: 0 };
+let pendingImage = null;  // base64
+
+/* ══════════════════════════════════════════
+   MOCK AI SERVICE — mirrors ai_service.py
+   ══════════════════════════════════════════ */
+const MOCK_PRODUCTS = {
+    // illness_id → products  (matches your _get_mock_chat_data)
+    2: [
+        { id: "prod-001", name: "Ridomil Gold MZ", description: "Systemic fungicide for Late Blight control", illness_id: 2, created_at: new Date().toISOString(), user_id: "mock-user" },
+        { id: "prod-002", name: "Mancozeb 80% WP", description: "Contact fungicide for preventive spraying", illness_id: 2, created_at: new Date().toISOString(), user_id: "mock-user" },
+        { id: "prod-003", name: "Copper Oxychloride", description: "Broad-spectrum protective fungicide", illness_id: 2, created_at: new Date().toISOString(), user_id: "mock-user" },
+    ],
+    // illness_id 99 has no products (for edge case testing)
+    99: []
+};
+
+function mockAiResponse(message) {
+    const lower = message.toLowerCase();
+
+    if (lower === '' || !message.trim()) {
+        return { error: "Empty message" };
+    }
+
+    if (lower.includes('expert')) {
+        return {
+            answer: "I don't know the answer. Let me connect you with an expert.",
+            action: "call_expert",
+            illness_id: null,
+            products: []
+        };
+    }
+
+    if (lower.includes('product')) {
+        const illnessId = 2;
+        return {
+            answer: "It seems you have Late Blight. Here are some recommended products.",
+            action: "ask_for_product",
+            illness_id: illnessId,
+            products: MOCK_PRODUCTS[illnessId] || []
+        };
+    }
+
+    if (lower.includes('no products') || lower.includes('no results')) {
+        return {
+            answer: "It seems you have a rare condition. Let me check for products.",
+            action: "ask_for_product",
+            illness_id: 99,
+            products: []
+        };
+    }
+
+    return {
+        answer: `Mock Chat: I received your message '${message}'. Please configure AI_CHAT_URL for real AI responses.`,
+        action: "message",
+        illness_id: null,
+        products: []
+    };
+}
+
+function mockImageAnalysis(type) {
+    if (type === 'disease') {
+        return {
+            answer: "Detected Late Blight with 87.3% confidence.",
+            action: "ask_for_product",
+            illness_id: 2,
+            products: MOCK_PRODUCTS[2] || []
+        };
+    }
+    return {
+        answer: "Mock Analysis: The image shows a healthy crop with no visible signs of disease.",
+        action: "message",
+        illness_id: null,
+        products: []
+    };
+}
+
+/* ══════════════════════════════════════════
+   MOCK WEBSOCKET SIMULATION
+   ══════════════════════════════════════════ */
+async function simulateMockFlow(content, messageType = 'text', imageAnalysisType = null) {
+    const msgId = 'msg-' + Date.now();
+    const now = new Date().toISOString();
+
+    // 1. Echo user message
+    const userPayload = {
+        type: 'message',
+        data: {
+            id: msgId,
+            conversation_id: convId,
+            sender_type: 'user',
+            message_type: messageType,
+            content: content,
+            created_at: now
+        }
+    };
+    logEntry('send', { content, message_type: messageType });
+    stats.sent++;
+    updateStats();
+
+    // simulate server echo of user message
+    await delay(100);
+    logEntry('recv', userPayload);
+    stats.recv++;
+    updateStats();
+    handleMockMessage(userPayload);
+
+    // 2. Typing indicator ON
+    await delay(200);
+    const typingOn = { type: 'typing', data: { is_typing: true } };
+    logEntry('recv', typingOn);
+    stats.recv++;
+    updateStats();
+    handleMockMessage(typingOn);
+
+    // 3. Get mock AI response
+    await delay(800 + Math.random() * 700);
+
+    let aiData;
+    if (messageType === 'image' && imageAnalysisType) {
+        aiData = mockImageAnalysis(imageAnalysisType);
+    } else {
+        aiData = mockAiResponse(content);
+    }
+
+    if (aiData.error) {
+        const errMsg = { error: aiData.error };
+        logEntry('recv', errMsg);
+        stats.err++;
+        updateStats();
+        // stop typing
+        handleMockMessage({ type: 'typing', data: { is_typing: false } });
+        addSystem('⚠ ' + aiData.error);
+        return;
+    }
+
+    // 4. Typing indicator OFF
+    const typingOff = { type: 'typing', data: { is_typing: false } };
+    logEntry('recv', typingOff);
+    stats.recv++;
+    updateStats();
+    handleMockMessage(typingOff);
+
+    // 5. AI message
+    const aiPayload = {
+        type: 'message',
+        data: {
+            id: 'ai-' + Date.now(),
+            conversation_id: convId,
+            sender_type: 'ai',
+            message_type: 'text',
+            content: aiData.answer,
+            created_at: new Date().toISOString(),
+            action: aiData.action,
+            products: aiData.products || []
+        }
+    };
+    logEntry('recv', aiPayload);
+    stats.recv++;
+    updateStats();
+    handleMockMessage(aiPayload);
+}
+
+function handleMockMessage(msg) {
+    if (msg.type === 'connected') {
+        convId = msg.conversation_id;
+        setConnectionStatus(true);
+        addSystem('Connected — new conversation started');
+    } else if (msg.type === 'typing') {
+        showTyping(msg.data.is_typing);
+    } else if (msg.type === 'message') {
+        const d = msg.data;
+        addBubble(d.sender_type, d.content, d.message_type, d.created_at, d.action, d.products);
+    } else if (msg.error) {
+        addSystem('⚠ ' + msg.error);
+    }
+}
+
+/* ══════════════════════════════════════════
+   LIVE WEBSOCKET
+   ══════════════════════════════════════════ */
+function connectLive() {
+    const server = document.getElementById('serverUrl').value.trim().replace(/\/+$/, '');
+    const token = document.getElementById('jwtToken').value.trim();
+    if (!token) { addSystem('⚠ JWT token required for live mode'); return; }
+
+    const url = `${server}/ws/chat/new?token=${token}`;
+    logEntry('sys', `Connecting to ${url}`);
+    ws = new WebSocket(url);
+
+    ws.onopen = () => logEntry('sys', 'WebSocket opened');
+
+    ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        logEntry('recv', msg);
+        stats.recv++;
+        updateStats();
+        handleMockMessage(msg);  // same handler works for real messages
+    };
+
+    ws.onclose = (e) => {
+        logEntry('sys', `Disconnected (code ${e.code})`);
+        setConnectionStatus(false);
+        addSystem(`Disconnected (code ${e.code})`);
+    };
+
+    ws.onerror = () => {
+        logEntry('err', 'WebSocket connection error');
+        stats.err++;
+        updateStats();
+        setConnectionStatus(false);
+    };
+}
+
+function sendLive(content, messageType = 'text') {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        addSystem('⚠ Not connected to live server');
+        return;
+    }
+    const payload = { content, message_type: messageType };
+    ws.send(JSON.stringify(payload));
+    logEntry('send', payload);
+    stats.sent++;
+    updateStats();
+}
+
+/* ══════════════════════════════════════════
+   SCENARIOS
+   ══════════════════════════════════════════ */
+async function runScenario(name) {
+    switch (name) {
+        case 'message':
+            await sendAuto("Hello! How is my wheat doing this season?");
+            break;
+
+        case 'product':
+            await sendAuto("My tomato leaves look bad, can you suggest a product to help?");
+            break;
+
+        case 'expert':
+            await sendAuto("This is complex, I need to talk to an expert about my soil contamination.");
+            break;
+
+        case 'image_healthy':
+            await sendAutoImage('healthy');
+            break;
+
+        case 'image_disease':
+            await sendAutoImage('disease');
+            break;
+
+        case 'empty':
+            await sendAuto("");
+            break;
+
+        case 'long':
+            const longMsg = "This is a very long message that simulates a user typing out a detailed description of their farming issue. ".repeat(8) +
+                "Can you help me with this?";
+            await sendAuto(longMsg);
+            break;
+
+        case 'rapid':
+            const messages = [
+                "First quick message",
+                "Second quick message about product",
+                "Third one — need an expert",
+                "Fourth: hello!",
+                "Fifth: goodbye!"
+            ];
+            for (const m of messages) {
+                sendAuto(m);  // intentionally not awaiting for rapid fire
+                await delay(200);
+            }
+            break;
+
+        case 'no_products':
+            await sendAuto("I think my plant has no results for any product match.");
+            break;
+
+        case 'full_flow':
+            addSystem('── Starting full flow test ──');
+            await delay(400);
+
+            addSystem('Step 1/3: Regular message');
+            await sendAuto("Hello! I need help with my crops.");
+            await delay(1500);
+
+            addSystem('Step 2/3: Product recommendation');
+            await sendAuto("Can you suggest a product for my tomato disease?");
+            await delay(1500);
+
+            addSystem('Step 3/3: Expert escalation');
+            await sendAuto("This is too complex, connect me with an expert please.");
+            await delay(500);
+
+            addSystem('── Full flow test complete ──');
+            break;
+    }
+}
+
+async function sendAuto(content) {
+    if (mode === 'mock') {
+        await simulateMockFlow(content, 'text');
+    } else {
+        sendLive(content, 'text');
+    }
+}
+
+async function sendAutoImage(type) {
+    if (mode === 'mock') {
+        // Simulate sending an image
+        const fakeImageContent = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...${type}`;
+        addSystem(`📷 Sending mock ${type} crop image...`);
+        await simulateMockFlow(fakeImageContent, 'image', type);
+    } else {
+        addSystem('⚠ Image upload in live mode requires the attach button');
+    }
+}
+
+function sendManual() {
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+
+    if (pendingImage) {
+        if (mode === 'mock') {
+            simulateMockFlow(pendingImage, 'image', 'disease');
+        } else {
+            sendLive(pendingImage, 'image');
+        }
+        clearImage();
+        input.value = '';
+        input.style.height = '44px';
+        return;
+    }
+
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = '44px';
+
+    if (mode === 'mock') {
+        simulateMockFlow(text, 'text');
+    } else {
+        sendLive(text, 'text');
+    }
+}
+
+/* ── Image handling ── */
+function previewImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        pendingImage = ev.target.result;  // base64 data URL
+        document.getElementById('previewImg').src = pendingImage;
+        document.getElementById('imgPreview').classList.add('active');
+        updateSendBtn();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+}
+
+function clearImage() {
+    pendingImage = null;
+    document.getElementById('imgPreview').classList.remove('active');
+    updateSendBtn();
+}
+
+/* ══════════════════════════════════════════
+   UI HELPERS
+   ══════════════════════════════════════════ */
+function addBubble(sender, content, msgType, timestamp, action, products) {
+    removeTyping();
+    const row = document.createElement('div');
+    row.className = `msg-row ${sender === 'user' ? 'user' : 'ai'}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+
+    if (msgType === 'image' && content.startsWith('data:image')) {
+        const img = document.createElement('img');
+        img.src = content;
+        img.alt = 'Uploaded image';
+        img.style.maxHeight = '200px';
+        img.onerror = () => { img.alt = '🖼️ [Mock Image]'; img.style.display = 'none'; bubble.textContent = '🖼️ [Image sent]'; };
+        bubble.appendChild(img);
+    } else {
+        bubble.textContent = content;
+    }
+
+    // Action card
+    if (action && action !== 'message') {
+        const card = document.createElement('div');
+        card.className = `action-card action-${action === 'ask_for_product' ? 'product' : 'expert'}`;
+
+        const label = document.createElement('div');
+        label.className = 'action-label';
+        label.textContent = action === 'ask_for_product' ? '🏷️ Action: Ask for Product' : '📞 Action: Call Expert';
+        card.appendChild(label);
+
+        if (products && products.length > 0) {
+            const list = document.createElement('ul');
+            list.className = 'product-list';
+            products.forEach(p => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${p.name}</strong> <span style="color:var(--text-dim)">— ${p.description || 'No description'}</span>`;
+                list.appendChild(li);
+            });
+            card.appendChild(list);
+        } else if (action === 'ask_for_product') {
+            const empty = document.createElement('div');
+            empty.style.cssText = 'color: var(--text-muted); font-style: italic; margin-top: 4px;';
+            empty.textContent = 'No products found for this illness.';
+            card.appendChild(empty);
+        }
+
+        bubble.appendChild(card);
+    }
+
+    const time = document.createElement('div');
+    time.className = 'msg-time';
+    time.textContent = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : nowStr();
+
+    row.appendChild(bubble);
+    row.appendChild(time);
+    document.getElementById('messages').appendChild(row);
+    scrollBottom();
+}
+
+function addSystem(text) {
+    const div = document.createElement('div');
+    div.className = 'system-msg';
+    div.textContent = text;
+    document.getElementById('messages').appendChild(div);
+    scrollBottom();
+}
+
+function showTyping(show) {
+    removeTyping();
+    if (!show) return;
+    const row = document.createElement('div');
+    row.className = 'typing-row';
+    row.id = 'typingIndicator';
+    row.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+    document.getElementById('messages').appendChild(row);
+    scrollBottom();
+}
+
+function removeTyping() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+}
+
+function setConnectionStatus(connected) {
+    const pill = document.getElementById('statusPill');
+    const text = document.getElementById('statusText');
+    if (connected) {
+        pill.className = 'status-pill connected';
+        text.textContent = mode === 'mock' ? 'Mock Ready' : 'Connected';
+    } else {
+        pill.className = 'status-pill disconnected';
+        text.textContent = 'Disconnected';
+    }
+    updateSendBtn();
+}
+
+function scrollBottom() {
+    const m = document.getElementById('messages');
+    requestAnimationFrame(() => { m.scrollTop = m.scrollHeight; });
+}
+
+function autoResize(el) {
+    el.style.height = '44px';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    updateSendBtn();
+}
+
+function updateSendBtn() {
+    const text = document.getElementById('msgInput').value.trim();
+    const sendBtn = document.getElementById('sendBtn');
+    
+    // In live mode, must be connected to send
+    if (mode === 'live' && (!ws || ws.readyState !== WebSocket.OPEN)) {
+        sendBtn.disabled = true;
+        return;
+    }
+    
+    // Enable send button if there's text OR a pending image
+    const canSend = text.length > 0 || pendingImage !== null;
+    sendBtn.disabled = !canSend;
+}
+
+function nowStr() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+/* ══════════════════════════════════════════
+   LOG
+   ══════════════════════════════════════════ */
+function logEntry(type, data) {
+    const container = document.getElementById('logEntries');
+    const entry = document.createElement('div');
+
+    const typeMap = {
+        send: { cls: 'log-send', label: '→ SEND' },
+        recv: { cls: 'log-recv', label: '← RECV' },
+        sys:  { cls: 'log-sys',  label: '● SYS' },
+        err:  { cls: 'log-err',  label: '✕ ERR' }
+    };
+
+    const t = typeMap[type] || typeMap.sys;
+    entry.className = `log-entry ${t.cls}`;
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dataStr = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+
+    // Truncate very long data for display
+    const displayStr = dataStr.length > 500 ? dataStr.substring(0, 500) + '...' : dataStr;
+
+    entry.innerHTML = `
+        <span class="log-time">${timeStr}</span>  <span class="log-dir">${t.label}</span>
+        <pre>${escapeHtml(displayStr)}</pre>
+    `;
+
+    container.appendChild(entry);
+    container.scrollTop = container.scrollHeight;
+}
+
+function clearLog() {
+    document.getElementById('logEntries').innerHTML = '';
+    stats = { sent: 0, recv: 0, err: 0 };
+    updateStats();
+}
+
+function updateStats() {
+    document.getElementById('statSent').textContent = stats.sent;
+    document.getElementById('statRecv').textContent = stats.recv;
+    document.getElementById('statErr').textContent = stats.err;
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* ══════════════════════════════════════════
+   MODE SWITCH
+   ══════════════════════════════════════════ */
+function setMode(m) {
+    mode = m;
+    document.getElementById('mockModeBtn').className = m === 'mock' ? 'active' : '';
+    document.getElementById('liveModeBtn').className = m === 'live' ? 'active' : '';
+    document.getElementById('serverSection').className = m === 'live' ? 'server-input-section visible' : 'server-input-section';
+    document.getElementById('modeLabel').textContent = m === 'mock' ? 'Mock Mode — no server needed' : 'Live Mode — connects to real server';
+
+    if (m === 'mock') {
+        if (ws) ws.close();
+        setConnectionStatus(true);
+        addSystem('Switched to Mock Mode');
+    } else {
+        setConnectionStatus(false);
+        addSystem('Switched to Live Mode — enter server URL & token, then send a message to connect');
+    }
+}
+
+/* ══════════════════════════════════════════
+   UTILITIES
+   ══════════════════════════════════════════ */
+function delay(ms) {
+    return new Promise(r => setTimeout(r, ms));
+}
+
+/* Enter to send */
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        const active = document.activeElement;
+        if (active && active.id === 'msgInput') {
+            e.preventDefault();
+            sendManual();
+        }
+    }
+});
+
+/* Init */
+addSystem('🧪 Mock Test Suite ready — click a scenario on the left or type a message');
+logEntry('sys', 'Test suite initialized in Mock Mode');
+</script>
+</body>
+</html>
