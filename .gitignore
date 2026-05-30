@@ -1,8 +1,0 @@
-.DS_Store
-
-# Local DBs
-*.db
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
