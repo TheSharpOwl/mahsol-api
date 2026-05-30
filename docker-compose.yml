@@ -27,10 +27,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=mysql+asyncmy://farmer:farmerpass@db:3306/farming_db
-      - DATABASE_URL_SYNC=mysql+pymysql://farmer:farmerpass@db:3306/farming_db
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL_SYNC=${DATABASE_URL_SYNC}
       - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
-      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - DEBUG=${DEBUG:-false}
     depends_on:
