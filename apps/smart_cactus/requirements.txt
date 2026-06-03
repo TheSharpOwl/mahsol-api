@@ -1,0 +1,58 @@
+# ── Web Framework ─────────────────────────────────────────────────────────────
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.12       # multipart/form-data file uploads
+
+# ── ML / Deep Learning ────────────────────────────────────────────────────────
+# NOTE: TensorFlow requires Python 3.9–3.12. Python 3.13+ is NOT supported.
+#       Use: py -3.11 -m venv venv  (Python 3.11 is the recommended version)
+tensorflow==2.18.0             # CPU build; use tensorflow[and-cuda] for GPU
+keras==3.13.2                  # must match the version that saved the model (3.13.2); 3.14+ breaks loading
+tf-keras==2.18.0               # kept as transitive dep; not used for loading
+# NOTE: tensorflow-intel (the actual Windows runtime) is installed automatically as a dependency.
+#       tensorflow-intel only exists up to 2.18.0 on Windows — do NOT upgrade tensorflow beyond 2.18.0.
+numpy==1.26.4
+Pillow==11.0.0                 # image decode / resize
+
+# ── Config & Validation ───────────────────────────────────────────────────────
+pydantic==2.9.2
+pydantic-settings==2.6.1
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+python-json-logger==2.0.7
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==8.3.3
+pytest-asyncio==0.24.0
+httpx==0.27.2                  # async test client for FastAPI
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RAG SERVICES
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Embeddings
+sentence-transformers>=3.0.0        # BAAI/bge-m3 multilingual model
+
+# Vector Database
+qdrant-client>=1.9.0                # Qdrant persistent collection
+
+# PDF Ingestion
+pdfplumber>=0.11.0                  # text + table extraction (uses pdfminer.six, no PyTorch needed)
+pypdf>=4.0.0                        # PDF metadata / page count fallback
+
+# LLM
+openai>=1.40.0                      # gpt-4o-mini via AsyncOpenAI
+
+# Chat History
+redis[asyncio]>=5.0.0               # per-user conversation memory
+
+# Text Splitting
+langchain-text-splitters>=0.2.0     # RecursiveCharacterTextSplitter
+
+# OCR (for scanned/image-based PDFs)
+pymupdf>=1.24.0                     # render PDF pages to images (no Poppler needed)
+easyocr>=1.7.0                      # OCR for Arabic + English (no system deps)
+
+torch==2.3.1
+transformers==4.44.2
+sentence-transformers==3.0.1

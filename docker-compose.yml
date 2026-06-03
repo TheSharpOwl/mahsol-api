@@ -21,15 +21,15 @@ services:
       retries: 5
 
   app:
-    build: .
+    build: ./apps/backend
     container_name: farming_api
     restart: always
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=mysql+asyncmy://farmer:farmerpass@db:3306/farming_db
-      - DATABASE_URL_SYNC=mysql+pymysql://farmer:farmerpass@db:3306/farming_db
-      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL_SYNC=${DATABASE_URL_SYNC}
+      - SECRET_KEY=${SECRET_KEY}
       - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - DEBUG=${DEBUG:-false}
@@ -37,7 +37,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - .:/app
+      - ./apps/backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:

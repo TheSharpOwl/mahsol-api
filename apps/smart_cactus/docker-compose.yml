@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  # ── Main API ───────────────────────────────────────────────────────────────
+  mahsoul-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mahsoul-backend:latest
+    container_name: mahsoul-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount model files from host — never bake large model weights into the image
+      - ./app/models/ml:/app/app/models/ml:ro
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=production
+      - LOG_FORMAT=json
+    # ── GPU support (requires nvidia-container-toolkit on the host) ──────────
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s   # model load can take ~60s on first start
+
+  # ── Vector Database (Qdrant) ───────────────────────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: mahsoul-qdrant
+    ports:
+      - "6333:6333"   # REST + dashboard
+      - "6334:6334"   # gRPC
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Chat History Cache (Redis) ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: mahsoul-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  qdrant_storage:
+  redis_data:
