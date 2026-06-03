@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .DS_Store
 
 # Local DBs
@@ -9,3 +10,14 @@ __pycache__/
 apps/smart_cactus/models/
 *.env
 apps/smart_cactus/data/
+=======
+.DS_Store
+
+# Local DBs
+*.db
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.env
+>>>>>>> main
