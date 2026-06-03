@@ -20,16 +20,16 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
+  backend:
     build: ./apps/backend
     container_name: farming_api
     restart: always
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - DATABASE_URL_SYNC=${DATABASE_URL_SYNC}
-      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL:-mysql+asyncmy://farmer:farmerpass@db:3306/farming_db}
+      - DATABASE_URL_SYNC=${DATABASE_URL_SYNC:-mysql+pymysql://farmer:farmerpass@db:3306/farming_db}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
       - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - DEBUG=${DEBUG:-false}
@@ -40,5 +40,79 @@ services:
       - ./apps/backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  mahsoul-backend:
+    build:
+      context: ./apps/smart_cactus
+      dockerfile: Dockerfile
+    image: mahsoul-backend:latest
+    container_name: mahsoul-backend
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./apps/smart_cactus/models/ml:/app/models/ml:ro
+      - ./apps/smart_cactus/models/ml:/app/app/models/ml:ro
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=production
+      - LOG_FORMAT=json
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # GPU support requires nvidia-container-toolkit on the host.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # Vector database (Qdrant)
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: mahsoul-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pidof", "qdrant"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # Chat history cache (Redis)
+  redis:
+    image: redis:7-alpine
+    container_name: mahsoul-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
 volumes:
   mysql_data:
+  qdrant_storage:
+  redis_data:
