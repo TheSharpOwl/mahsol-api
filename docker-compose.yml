@@ -40,12 +40,12 @@ services:
       - ./apps/backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  mahsoul-backend:
+  smart_cactus:
     build:
       context: ./apps/smart_cactus
       dockerfile: Dockerfile
-    image: mahsoul-backend:latest
-    container_name: mahsoul-backend
+    image: smart_cactus:latest
+    container_name: smart_cactus
     ports:
       - "8001:8000"
     volumes:

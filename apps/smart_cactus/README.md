@@ -13,7 +13,7 @@ Request → FastAPI → Route → Service → ModelLoader (singleton) → TF Mod
 ## Project Structure
 
 ```
-mahsoul-backend/
+smart_cactus/
 ├── app/
 │   ├── main.py                    ← FastAPI app, middleware, lifespan
 │   ├── core/

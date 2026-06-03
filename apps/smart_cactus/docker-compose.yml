@@ -2,12 +2,12 @@ version: "3.9"
 
 services:
   # ── Main API ───────────────────────────────────────────────────────────────
-  mahsoul-backend:
+  smart_cactus:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mahsoul-backend:latest
-    container_name: mahsoul-backend
+    image: smart_cactus:latest
+    container_name: smart_cactus
     ports:
       - "8000:8000"
     volumes:
