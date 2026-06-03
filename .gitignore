@@ -6,3 +6,6 @@
 __pycache__/
 *.pyc
 *.pyo
+apps/smart_cactus/models/
+*.env
+apps/smart_cactus/data/
