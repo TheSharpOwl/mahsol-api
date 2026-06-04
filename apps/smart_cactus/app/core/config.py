@@ -1,6 +1,7 @@
+import os
+
 from pathlib import Path
 from typing import List
-
 from pydantic_settings import BaseSettings
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -30,6 +31,9 @@ class Settings(BaseSettings):
     )
     MODEL_NAME: str = "Mahsoul_Ensemble_v3"
 
+    # Public URL source for model artifacts (no credentials required).
+    # If set, these are downloaded to MODEL_PATH and CLASS_INDICES_PATH.
+    MODEL_PUBLIC_URL: str = os.getenv("MODEL_PUBLIC_URL", "")
     # ── Image Preprocessing  (must match Albumentations training pipeline) ────
     IMAGE_SIZE: int = 224
     NORMALIZE_MEAN: List[float] = [0.485, 0.456, 0.406]

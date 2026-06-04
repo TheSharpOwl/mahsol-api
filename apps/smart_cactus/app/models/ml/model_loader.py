@@ -11,10 +11,12 @@ Design guarantees:
 import asyncio
 import json
 import logging
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Lock
 from typing import Dict, Optional
+from urllib.request import Request, urlopen
 
 import numpy as np
 
@@ -59,6 +61,13 @@ class ModelLoader:
 
         model_path = Path(settings.MODEL_PATH)
         class_path = Path(settings.CLASS_INDICES_PATH)
+
+        if settings.MODEL_PUBLIC_URL:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                self._executor,
+                lambda: self._download_public_file(settings.MODEL_PUBLIC_URL, model_path),
+            )
 
         if not model_path.exists():
             raise FileNotFoundError(
@@ -147,3 +156,11 @@ class ModelLoader:
             logger.info("Model warmup completed")
         except Exception as exc:
             logger.warning(f"Model warmup failed (non-fatal): {exc}")
+
+    @staticmethod
+    def _download_public_file(url: str, destination: Path) -> None:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        req = Request(url, headers={"User-Agent": "smart-cactus/1.0"})
+        with urlopen(req, timeout=120) as response:
+            with open(destination, "wb") as out_file:
+                shutil.copyfileobj(response, out_file)
