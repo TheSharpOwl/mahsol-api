@@ -49,8 +49,7 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ./apps/smart_cactus/models/ml:/app/models/ml:ro
-      - ./apps/smart_cactus/models/ml:/app/app/models/ml:ro
+      - ./apps/smart_cactus/nn/mahsoul_production_model.h5:/app/app/models/ml/mahsoul_production_model.h5:ro
     env_file:
       - .env
     environment:
