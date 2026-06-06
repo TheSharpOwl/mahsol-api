@@ -76,11 +76,12 @@ def check_roles(*allowed_roles: str):
     Usage:
         @router.get("/some-endpoint", dependencies=[Depends(check_roles("expert", "company"))])
     """
-    async def role_checker(current_user = Depends(get_current_user)):
-        if current_user.role not in allowed_roles:
+    async def role_checker(current_user=Depends(get_current_user)):
+        role_value = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
+        if role_value not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to access this resource."
+                detail="You do not have permission to access this resource.",
             )
         return current_user
     return role_checker
