@@ -48,8 +48,6 @@ services:
     container_name: smart_cactus
     ports:
       - "8001:8000"
-    volumes:
-      - ./apps/smart_cactus/nn/mahsoul_production_model.h5:/app/app/models/ml/mahsoul_production_model.h5:ro
     env_file:
       - .env
     environment:
