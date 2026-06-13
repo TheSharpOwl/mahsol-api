@@ -62,12 +62,20 @@ class ModelLoader:
         model_path = Path(settings.MODEL_PATH)
         class_path = Path(settings.CLASS_INDICES_PATH)
 
-        if settings.MODEL_PUBLIC_URL:
+        # In production, download the model from the public bucket.
+        # In any other environment, use the local file already on disk.
+        if settings.ENVIRONMENT == "production":
+            if not settings.MODEL_PUBLIC_URL:
+                raise RuntimeError(
+                    "ENVIRONMENT is 'production' but MODEL_PUBLIC_URL is not set."
+                )
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(
                 self._executor,
                 lambda: self._download_public_file(settings.MODEL_PUBLIC_URL, model_path),
             )
+        else:
+            logger.info(f"Non-production environment — using local model: {model_path}")
 
         if not model_path.exists():
             raise FileNotFoundError(
