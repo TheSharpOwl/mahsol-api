@@ -1,17 +1,37 @@
 steps:
+  # ── Backend API ─────────────────────────────────────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend'
     args:
       - 'build'
       - '-t'
-      - '${_IMAGE}'
+      - '${_BACKEND_IMAGE}'
       - '-f'
-      - 'Dockerfile'
-      - '.'                      # build context = repo root (/workspace)
+      - 'apps/backend/Dockerfile'
+      - 'apps/backend'          # build context = apps/backend
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_IMAGE}']
+    id: 'push-backend'
+    args: ['push', '${_BACKEND_IMAGE}']
+
+  # ── Smart Cactus (ML inference) ─────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-smart-cactus'
+    args:
+      - 'build'
+      - '-t'
+      - '${_SMART_CACTUS_IMAGE}'
+      - '-f'
+      - 'apps/smart_cactus/Dockerfile'
+      - 'apps/smart_cactus'     # build context = apps/smart_cactus
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-smart-cactus'
+    args: ['push', '${_SMART_CACTUS_IMAGE}']
+
 images:
-  - '${_IMAGE}'
+  - '${_BACKEND_IMAGE}'
+  - '${_SMART_CACTUS_IMAGE}'
 substitutions:
-  _IMAGE: 'gcr.io/$PROJECT_ID/mahsol-api:$SHORT_SHA'
+  _BACKEND_IMAGE: 'gcr.io/$PROJECT_ID/mahsol-backend:$SHORT_SHA'
+  _SMART_CACTUS_IMAGE: 'gcr.io/$PROJECT_ID/mahsol-smart-cactus:$SHORT_SHA'
 options:
   logging: CLOUD_LOGGING_ONLY
