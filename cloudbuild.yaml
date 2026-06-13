@@ -1,37 +1,5 @@
 steps:
-  # ── Backend API ─────────────────────────────────────────────────────────────
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'build-backend'
-    args:
-      - 'build'
-      - '-t'
-      - '${_BACKEND_IMAGE}'
-      - '-f'
-      - 'apps/backend/Dockerfile'
-      - 'apps/backend'          # build context = apps/backend
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-backend'
-    args: ['push', '${_BACKEND_IMAGE}']
-
-  # ── Smart Cactus (ML inference) ─────────────────────────────────────────────
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'build-smart-cactus'
-    args:
-      - 'build'
-      - '-t'
-      - '${_SMART_CACTUS_IMAGE}'
-      - '-f'
-      - 'apps/smart_cactus/Dockerfile'
-      - 'apps/smart_cactus'     # build context = apps/smart_cactus
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-smart-cactus'
-    args: ['push', '${_SMART_CACTUS_IMAGE}']
-
-images:
-  - '${_BACKEND_IMAGE}'
-  - '${_SMART_CACTUS_IMAGE}'
-substitutions:
-  _BACKEND_IMAGE: 'gcr.io/$PROJECT_ID/mahsol-backend:$SHORT_SHA'
-  _SMART_CACTUS_IMAGE: 'gcr.io/$PROJECT_ID/mahsol-smart-cactus:$SHORT_SHA'
+  - name: 'docker/compose:1.29.2'
+    args: ['-f', 'docker-compose.yml', 'up', '-d']
 options:
   logging: CLOUD_LOGGING_ONLY
