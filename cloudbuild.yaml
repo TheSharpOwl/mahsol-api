@@ -1,5 +1,36 @@
 steps:
   - name: 'docker/compose:1.29.2'
     args: ['-f', 'docker-compose.yml', 'up', '-d']
+    # Secrets are injected here (NOT from a .env file in the repo).
+    # Plain substitutions come from the Cloud Build trigger settings ("repo settings").
+    # Real secrets come from Secret Manager via secretEnv (see availableSecrets below).
+    env:
+      - 'MODEL_PUBLIC_URL=${_MODEL_PUBLIC_URL}'
+      - 'DATABASE_URL=${_DATABASE_URL}'
+      - 'DATABASE_URL_SYNC=${_DATABASE_URL_SYNC}'
+      - 'OPENWEATHER_API_KEY=${_OPENWEATHER_API_KEY}'
+      - 'DEBUG=${_DEBUG}'
+    secretEnv:
+      - 'OPENAI_API_KEY'
+      - 'SECRET_KEY'
 options:
   logging: CLOUD_LOGGING_ONLY
+
+# Map Secret Manager secrets to the env vars used above.
+# Create them once with:
+#   echo -n "<value>" | gcloud secrets create OPENAI_API_KEY --data-file=-
+#   echo -n "<value>" | gcloud secrets create SECRET_KEY --data-file=-
+availableSecrets:
+  secretManager:
+    - versionName: 'projects/$PROJECT_ID/secrets/OPENAI_API_KEY/versions/latest'
+      env: 'OPENAI_API_KEY'
+    - versionName: 'projects/$PROJECT_ID/secrets/SECRET_KEY/versions/latest'
+      env: 'SECRET_KEY'
+
+# Non-secret defaults. Override these in the Cloud Build trigger's substitution settings.
+substitutions:
+  _MODEL_PUBLIC_URL: 'https://storage.googleapis.com/masol-nn/nn/mahsoul_production_model.h5'
+  _DATABASE_URL: ''
+  _DATABASE_URL_SYNC: ''
+  _OPENWEATHER_API_KEY: ''
+  _DEBUG: 'false'
