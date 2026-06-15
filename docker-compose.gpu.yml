@@ -1,0 +1,13 @@
+# GPU override for smart_cactus.
+# Requires the NVIDIA Container Toolkit installed on the host.
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up
+services:
+  smart_cactus:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

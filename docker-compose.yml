@@ -60,14 +60,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # GPU support requires nvidia-container-toolkit on the host.
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # GPU support is opt-in. The base config runs CPU-only so it works on hosts
+    # without the nvidia-container-toolkit. To enable GPU, also pass the override:
+    #   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
