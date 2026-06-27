@@ -11,17 +11,17 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def signup(payload: UserSignupRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == payload.email))
+    result = await db.execute(select(User).where(User.email == payload.username))
     existing = result.scalar_one_or_none()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="An account with this email already exists",
+            detail="An account with this username already exists",
         )
 
     user = User(
-        name=payload.name,
-        email=payload.email,
+        name=payload.username,
+        email=payload.username,
         password=hash_password(payload.password),
         role=payload.role,
     )
@@ -37,23 +37,33 @@ async def signup(payload: UserSignupRequest, db: AsyncSession = Depends(get_db))
     token = create_access_token({"sub": user.id, "role": user.role.value})
     return TokenResponse(
         access_token=token,
-        user=UserResponse.model_validate(user),
+        user=UserResponse(
+            id=user.id,
+            username=user.email,
+            role=user.role,
+            created_at=user.created_at,
+        ),
     )
 
 
 @router.post("/login", response_model=TokenResponse)
 async def login(payload: UserLoginRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == payload.email))
+    result = await db.execute(select(User).where(User.email == payload.username))
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(payload.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Invalid username or password",
         )
 
     token = create_access_token({"sub": user.id, "role": user.role.value})
     return TokenResponse(
         access_token=token,
-        user=UserResponse.model_validate(user),
+        user=UserResponse(
+            id=user.id,
+            username=user.email,
+            role=user.role,
+            created_at=user.created_at,
+        ),
     )

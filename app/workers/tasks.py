@@ -36,8 +36,6 @@ def generate_daily_reports_task(self):
 
 
 async def _generate_all_farmer_reports():
-    from app.services.weather_service import fetch_weather
-    from app.services.ai_service import generate_daily_report
 
     async with async_session_factory() as db:
         result = await db.execute(

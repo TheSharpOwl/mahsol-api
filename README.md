@@ -190,8 +190,7 @@ Register a new farmer or expert account.
 curl -X POST http://localhost:8000/auth/signup \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "John Farmer",
-    "email": "john@farm.com",
+    "username": "john_farmer",
     "password": "securepassword123",
     "role": "farmer"
   }'
@@ -204,8 +203,7 @@ Response:
   "token_type": "bearer",
   "user": {
     "id": "uuid",
-    "name": "John Farmer",
-    "email": "john@farm.com",
+    "username": "john_farmer",
     "role": "farmer",
     "created_at": "2025-01-01T06:00:00Z"
   }
@@ -218,7 +216,7 @@ Login and receive a JWT token.
 ```bash
 curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "john@farm.com", "password": "securepassword123"}'
+  -d '{"username": "john_farmer", "password": "securepassword123"}'
 ```
 
 ---

@@ -4,8 +4,8 @@ from app.models.user import UserRole
 
 
 class UserSignupRequest(BaseModel):
-    name: str
-    email: EmailStr
+    username: str
+    email: EmailStr | None = None
     password: str
     role: UserRole = UserRole.farmer
     latitude: float
@@ -20,14 +20,13 @@ class UserSignupRequest(BaseModel):
 
 
 class UserLoginRequest(BaseModel):
-    email: EmailStr
+    username: str
     password: str
 
 
 class UserResponse(BaseModel):
     id: str
-    name: str
-    email: str
+    username: str
     role: UserRole
     created_at: datetime
 
