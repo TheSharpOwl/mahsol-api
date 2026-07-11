@@ -1,10 +1,10 @@
-import bcrypt
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.core import accounts
 from app.core.db import get_db
-from app.core.models import SignUpRequest, User
+from app.core.models import SignInRequest, SignUpRequest
+from app.core.security import get_current_user
 
 router = APIRouter()
 
@@ -16,13 +16,14 @@ def hello() -> dict[str, str]:
 
 @router.post("/signup", tags=["auth"], status_code=201)
 def sign_up(request: SignUpRequest, db: Session = Depends(get_db)) -> dict[str, str]:
-    existing = db.scalar(select(User).where(User.email == request.email))
-    if existing is not None:
-        raise HTTPException(status_code=409, detail="Email already registered")
+    return accounts.sign_up_user(db, request)
 
-    hashed = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt()).decode()
-    user = User(email=request.email, hashed_password=hashed, role=request.role)
-    db.add(user)
-    db.commit()
 
-    return {"message": f"User {user.email} created as {user.role.value}"}
+@router.post("/signin", tags=["auth"])
+def sign_in(request: SignInRequest, db: Session = Depends(get_db)) -> dict[str, str]:
+    return accounts.sign_in_user(db, request)
+
+
+@router.get("/me", tags=["auth"])
+def me(current_user: dict = Depends(get_current_user)) -> dict[str, str]:
+    return accounts.get_account_info(current_user)

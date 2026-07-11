@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     debug: bool = False
     # e.g. postgresql+psycopg://user:password@host:5432/dbname
     database_url: str = ""
+    # Used to sign JWTs — set a long random value in .env for production
+    secret_key: str = ""
+    access_token_expire_minutes: int = 60 * 24  # 24 hours
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

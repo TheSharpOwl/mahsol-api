@@ -10,6 +10,7 @@ from app.core.db import Base
 class UserRole(str, Enum):
     pharmacist = "pharmacist"
     company = "company"
+    farmer = "farmer"
     admin = "admin"
 
 
@@ -17,6 +18,11 @@ class SignUpRequest(BaseModel):
     email: EmailStr
     password: str
     role: UserRole
+
+
+class SignInRequest(BaseModel):
+    email: EmailStr
+    password: str
 
 
 class User(Base):
