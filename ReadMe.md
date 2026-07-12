@@ -48,7 +48,7 @@ python -m venv .venv
 | POST   | `/api/v1/signin` | Sign in, returns a bearer token and the role       |
 | GET    | `/api/v1/me`     | Current user info (requires `Authorization` header)|
 
-Roles: `pharmacist`, `company`, `farmer`, `admin`.
+Roles: `farmer`, `expert`, `pharmacist`, `company`, `admin`.
 
 Authenticated requests send the token from signin as a header:
 

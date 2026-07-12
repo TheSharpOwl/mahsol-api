@@ -8,9 +8,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.db import Base
 
 class UserRole(str, Enum):
+    farmer = "farmer"
+    expert = "expert"
     pharmacist = "pharmacist"
     company = "company"
-    farmer = "farmer"
     admin = "admin"
 
 
