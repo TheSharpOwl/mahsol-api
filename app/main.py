@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 
+import anyio
 from fastapi import FastAPI
 
 from app.api.routes import router
@@ -12,7 +13,9 @@ async def lifespan(app: FastAPI):
     if settings.database_url:
         from app.core.db import Base, get_engine
 
-        Base.metadata.create_all(bind=get_engine())
+        await anyio.to_thread.run_sync(
+            lambda: Base.metadata.create_all(bind=get_engine())
+        )
     yield
 
 
