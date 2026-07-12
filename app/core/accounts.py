@@ -1,6 +1,7 @@
 import bcrypt
 from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.models import SignInRequest, SignUpRequest, User
@@ -15,7 +16,11 @@ def sign_up_user(db: Session, request: SignUpRequest) -> dict[str, str]:
     hashed = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt()).decode()
     user = User(email=request.email, hashed_password=hashed, role=request.role)
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Email already registered")
 
     return {"message": f"User {user.email} created as {user.role.value}"}
 
