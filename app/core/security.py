@@ -10,6 +10,9 @@ _bearer = HTTPBearer(auto_error=False)
 
 
 def create_access_token(email: str, role: str) -> str:
+    if not settings.secret_key:
+        raise HTTPException(status_code=503, detail="Auth is not configured")
+
     expires = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_expire_minutes
     )
