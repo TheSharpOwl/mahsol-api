@@ -23,11 +23,19 @@ def create_access_token(email: str, role: str) -> str:
 def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
 ) -> dict:
+    if not settings.secret_key:
+        raise HTTPException(status_code=503, detail="Auth is not configured")
     if credentials is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
-        return jwt.decode(
+        payload = jwt.decode(
             credentials.credentials, settings.secret_key, algorithms=["HS256"]
         )
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    sub = payload.get("sub")
+    role = payload.get("role")
+    if not isinstance(sub, str) or not isinstance(role, str):
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return payload
