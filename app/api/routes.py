@@ -33,7 +33,7 @@ def me(current_user: dict = Depends(get_current_user)) -> dict[str, str]:
 async def soil_lookup(
     latitude: float,
     longitude: float,
-    current_user: dict = Depends(get_current_user),
+    _current_user: dict = Depends(get_current_user),
 ) -> SoilDetails:
     return await soil.fetch_soil_details(latitude, longitude)
 
