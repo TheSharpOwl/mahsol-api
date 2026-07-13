@@ -47,6 +47,8 @@ python -m venv .venv
 | POST   | `/api/v1/signup` | Create account (email, password, role)             |
 | POST   | `/api/v1/signin` | Sign in, returns a bearer token and the role       |
 | GET    | `/api/v1/me`     | Current user info (requires `Authorization` header)|
+| GET    | `/api/v1/soil/lookup` | Soil details for `?latitude=..&longitude=..` (auth required) |
+| POST   | `/api/v1/soil`   | Save soil details for the current account (auth required) |
 
 Roles: `farmer`, `expert`, `pharmacist`, `company`, `admin`.
 
