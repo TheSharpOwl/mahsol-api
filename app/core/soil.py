@@ -77,6 +77,8 @@ async def fetch_soil_details(latitude: float, longitude: float) -> SoilDetails:
 
 
 def save_soil_details(db: Session, email: str, details: SoilDetails) -> dict[str, str]:
+    from sqlalchemy.exc import IntegrityError
+
     user = db.scalar(select(User).where(User.email == email))
     if user is None:
         raise HTTPException(status_code=401, detail="Account no longer exists")
@@ -85,8 +87,21 @@ def save_soil_details(db: Session, email: str, details: SoilDetails) -> dict[str
     if soil is None:
         soil = SoilInfo(user_id=user.id)
         db.add(soil)
-    for field, value in details.model_dump().items():
+
+    payload = details.model_dump()
+    for field, value in payload.items():
         setattr(soil, field, value)
-    db.commit()
+
+    try:
+        db.commit()
+    except IntegrityError:
+        # Handle concurrent first-write (unique user_id) and ensure the session is usable.
+        db.rollback()
+        soil = db.scalar(select(SoilInfo).where(SoilInfo.user_id == user.id))
+        if soil is None:
+            raise HTTPException(status_code=500, detail="Failed to save soil details")
+        for field, value in payload.items():
+            setattr(soil, field, value)
+        db.commit()
 
     return {"message": f"Soil details saved for {user.email}"}
