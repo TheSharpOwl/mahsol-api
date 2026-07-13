@@ -1,11 +1,7 @@
-
 from enum import Enum
 
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.db import Base
 
 class UserRole(str, Enum):
     farmer = "farmer"
@@ -26,10 +22,15 @@ class SignInRequest(BaseModel):
     password: str
 
 
-class User(Base):
-    __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    hashed_password: Mapped[str] = mapped_column(String(255))
-    role: Mapped[UserRole]
+class SoilDetails(BaseModel):
+    latitude: float
+    longitude: float
+    soil_type: str | None = None  # WRB reference class, e.g. "Calcisols"
+    sand_percent: float | None = None
+    silt_percent: float | None = None
+    clay_percent: float | None = None
+    ph: float | None = None
+    organic_carbon: float | None = None  # g/kg
+    nitrogen: float | None = None  # g/kg
+    cation_exchange_capacity: float | None = None  # cmol(c)/kg
+    bulk_density: float | None = None  # kg/dm3

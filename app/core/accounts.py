@@ -4,8 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.models import SignInRequest, SignUpRequest, User
+from app.core.models import SignInRequest, SignUpRequest
 from app.core.security import create_access_token
+from app.core.db_models import User
 
 
 def sign_up_user(db: Session, request: SignUpRequest) -> dict[str, str]:
